@@ -26,7 +26,7 @@ EXPENSES_DATA_PATH = BASE_DIR / "EXPENSES.csv"
 CREDT_DATA_PATH = BASE_DIR / "CREDENTIAL.txt"
 ADDRESS_CACHE_PATH = BASE_DIR / "ADDRESS_CACHE.json"
 GEMINI_MODEL = "gemini-3.5-flash-lite"
-DEFAULT_EMPLOYEE = {"Employee ID": "EMP101", "Full Name": "Default Store Clerk", "Phone": "", "Email": "", "Username": "user@", "Password": "12345678", "Designation": "Store Clerk", "Access": "sd", "Status": "Active", "Joined On": datetime.now().strftime("%d-%m-%Y")}
+DEFAULT_EMPLOYEE = {"Employee ID": "EMP101", "Full Name": "Owner", "Phone": "", "Email": "", "Username": "user@", "Password": "12345678", "Designation": "Director", "Access": "csp", "Status": "Active", "Joined On": datetime.now().strftime("%d-%m-%Y")}
 
 BOOK_HEADERS = ["Book ID", "Book Name", "Author Name", "Genre", "Language", "Published Date", "Wholesale Price", "Market Price", "Profit Margin", "Quantities Available"]
 EMP_HEADERS = ["Employee ID", "Full Name", "Phone", "Email", "Username", "Password", "Designation", "Access", "Status", "Joined On"]
