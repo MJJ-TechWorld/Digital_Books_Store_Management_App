@@ -11,10 +11,9 @@ from datetime import datetime
 from openpyxl import Workbook, load_workbook
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+from reportlab.lib.enums import TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -471,125 +470,25 @@ def load_expenses():
     return rows
 
 def invoice_html(order, items):
-    rows = "".join(
-        f"<tr><td>📖 <strong>{html.escape(str(i['name']))}</strong><br><span class='muted'>{html.escape(str(i.get('author', '')))}</span></td><td>{html.escape(str(i['book_id']))}</td><td>{i['quantity']}</td><td>₹{i['unit_price']:.2f}</td><td>₹{i['line_total']:.2f}</td></tr>"
-        for i in items
-    )
+    rows = "".join(f"<tr><td>{html.escape(str(i['name']))}</td><td>{html.escape(str(i['book_id']))}</td><td>{i['quantity']}</td><td>₹{i['unit_price']:.2f}</td><td>₹{i['line_total']:.2f}</td></tr>" for i in items)
     address = ", ".join(x for x in [order['flat'], order['street'], order['landmark'], order['city'], order['state'] + " - " + order['pin']] if x)
-    item_count = sum(int(i['quantity']) for i in items)
-    return f'''<!doctype html><html><head><meta charset="utf-8"><title>{order['order_id']}</title><style>
-body{{font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef2ff,#f8fafc);color:#172033;padding:28px}}
-.invoice{{max-width:920px;margin:auto;background:#fff;border-radius:24px;padding:38px;box-shadow:0 20px 70px #14213d20;border:1px solid #e5e7eb}}
-.top{{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #e5e7eb;padding-bottom:22px}}
-h1{{margin:0;color:#4338ca;font-size:30px}}.brand{{font-size:13px;color:#667085;margin-top:6px}}
-.order-box{{background:#eef2ff;border-radius:16px;padding:14px 18px;text-align:right}}
-.section-title{{color:#312e81;margin-top:26px}}.muted{{color:#667085;font-size:12px}}
-.info-grid{{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}}
-.info-card{{background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px;padding:18px}}
-table{{width:100%;border-collapse:separate;border-spacing:0;margin-top:18px;overflow:hidden;border:1px solid #e5e7eb;border-radius:14px}}
-th,td{{padding:13px;border-bottom:1px solid #e5e7eb;text-align:left}}th{{background:#4338ca;color:#fff}}tr:last-child td{{border-bottom:0}}
-.summary{{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:16px}}.summary-card{{background:#f8fafc;border-radius:15px;padding:16px;border:1px solid #e5e7eb}}
-.total{{font-size:27px;font-weight:800;text-align:right;margin-top:20px;color:#0f766e}}
-.footer-pro{{margin-top:36px;padding-top:24px;border-top:2px solid #e5e7eb;text-align:center}}.footer-title{{font-size:19px;font-weight:800;color:#4338ca}}.footer-sub{{font-size:12px;color:#667085;margin-top:6px}}.footer-copy{{font-size:10px;color:#98a2b3;margin-top:14px;line-height:1.7}}
-@media(max-width:700px){{.info-grid,.summary{{grid-template-columns:1fr}}.top{{flex-direction:column}}.order-box{{text-align:left}}}}
-</style></head><body><div class="invoice">
-<div class="top"><div><h1>📚 DIGITAL BOOKS STORE</h1><div class="brand">Customer Order Invoice · Thank you for choosing your next read.</div></div><div class="order-box"><b>ORDER ID</b><br>{html.escape(str(order['order_id']))}<br><span class="muted">{html.escape(str(order['date']))}</span></div></div>
-<h3 class="section-title">👤 Customer & Delivery Details</h3><div class="info-grid"><div class="info-card"><b>Customer</b><p><strong>{html.escape(order['customer_name'])}</strong><br>📞 {html.escape(order['phone'])}</p></div><div class="info-card"><b>📍 Delivery Address</b><p>{html.escape(address)}</p></div></div>
-<h3 class="section-title">📚 Books In This Order</h3><table><tr><th>Book</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>{rows}</table>
-<div class="summary"><div class="summary-card"><b>📦 Items</b><br>{item_count} book unit(s)<br><span class="muted">All items are confirmed for this order.</span></div><div class="summary-card"><b>💳 Payment</b><br>{html.escape(str(order['payment']))}<br><span class="muted">Payment is due on delivery.</span></div></div>
-<div class="total">Grand Total: ₹{order['grand_total']:.2f}</div><p class="muted" style="text-align:right">Status: Confirmed · Cash on Delivery</p>
-<div class="footer-pro"><div class="footer-title">Digital Books Store</div><div class="footer-sub">Crafted For Readers, Designed By MJJ-TechWorld</div><div class="footer-sub">Your Data Is Safe & Private • Customer information is used for order processing and store records.</div><div class="footer-copy">© 2026 Digital Books Store. All Rights Reserved. | Order Terms | Privacy Notice | Disclaimer<br>Designed & Developed By MJJ-TechWorld • Made In India • Support: support@mjjtechworld.com • Version 2.0</div></div>
-</div></body></html>'''
+    return f'''<!doctype html><html><head><meta charset="utf-8"><title>{order['order_id']}</title><style>body{{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033;padding:32px}}.invoice{{max-width:900px;margin:auto;background:white;border-radius:22px;padding:36px;box-shadow:0 20px 60px #14213d18}}h1{{margin:0;color:#633cff}}.top{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e5e7eb;padding-bottom:22px}}table{{width:100%;border-collapse:collapse;margin-top:25px}}th,td{{padding:13px;border-bottom:1px solid #e5e7eb;text-align:left}}th{{background:#f0edff}}.total{{font-size:24px;font-weight:800;text-align:right;margin-top:22px;color:#0f8b6d}}.muted{{color:#667085}}</style></head><body><div class="invoice"><div class="top"><div><h1>BOOKNEST</h1><p class="muted">Premium Book Store · Tax Invoice</p></div><div><b>Order ID</b><br>{order['order_id']}<br><span class="muted">{order['date']}</span></div></div><h3>Customer</h3><p><b>{html.escape(order['customer_name'])}</b><br>{html.escape(order['phone'])}<br>{html.escape(address)}</p><table><tr><th>Book</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>{rows}</table><div class="total">Grand Total: ₹{order['grand_total']:.2f}</div><p class="muted">Payment: {order['payment']} · Status: Confirmed</p></div></body></html>'''
 
 
 def invoice_pdf(order, items):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=28, bottomMargin=30)
-    styles = getSampleStyleSheet()
-    title = ParagraphStyle("InvoiceTitle", parent=styles["Title"], fontSize=23, leading=27, textColor=colors.HexColor("#4338ca"), spaceAfter=5)
-    subtitle = ParagraphStyle("InvoiceSubtitle", parent=styles["Normal"], fontSize=9, leading=13, textColor=colors.HexColor("#667085"))
-    small = ParagraphStyle("InvoiceSmall", parent=styles["Normal"], fontSize=8.5, leading=12, textColor=colors.HexColor("#667085"))
-    body = ParagraphStyle("InvoiceBody", parent=styles["Normal"], fontSize=9.5, leading=13, textColor=colors.HexColor("#172033"))
-    section = ParagraphStyle("InvoiceSection", parent=styles["Heading3"], fontSize=12, leading=15, textColor=colors.HexColor("#312e81"), spaceBefore=12, spaceAfter=7)
-    right = ParagraphStyle("InvoiceRight", parent=body, alignment=TA_RIGHT)
-    total_style = ParagraphStyle("InvoiceTotal", parent=styles["Heading2"], fontSize=18, leading=22, alignment=TA_RIGHT, textColor=colors.HexColor("#0f766e"))
-    footer_title = ParagraphStyle("FooterTitle", parent=styles["Heading3"], fontSize=12, leading=15, alignment=TA_CENTER, textColor=colors.HexColor("#4338ca"))
-    footer = ParagraphStyle("Footer", parent=small, alignment=TA_CENTER, fontSize=7.5, leading=10, textColor=colors.HexColor("#667085"))
-
-    story = []
-    header = Table([
-        [Paragraph("DIGITAL BOOKS STORE", title), Paragraph(f"<b>ORDER ID</b><br/>{html.escape(str(order['order_id']))}<br/><font color='#667085'>{html.escape(str(order['date']))}</font>", right)]
-    ], colWidths=[105 * mm, 65 * mm])
-    header.setStyle(TableStyle([
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("BACKGROUND", (1, 0), (1, 0), colors.HexColor("#eef2ff")),
-        ("BOX", (1, 0), (1, 0), 0.5, colors.HexColor("#c7d2fe")),
-        ("LEFTPADDING", (1, 0), (1, 0), 10), ("RIGHTPADDING", (1, 0), (1, 0), 10),
-        ("TOPPADDING", (1, 0), (1, 0), 9), ("BOTTOMPADDING", (1, 0), (1, 0), 9),
-    ]))
-    story += [header, Paragraph("Customer Order Invoice · Thank you for choosing your next read.", subtitle), Spacer(1, 10)]
-
-    address = ", ".join(x for x in [order.get("flat", ""), order.get("street", ""), order.get("landmark", ""), order.get("city", ""), f"{order.get('state', '')} - {order.get('pin', '')}" if order.get("state") else ""] if x)
-    story.append(Paragraph("◆ Customer & Delivery Details", section))
-    info = Table([
-        [Paragraph(f"<b>Customer</b><br/><br/><b>{html.escape(str(order['customer_name']))}</b><br/>☎ {html.escape(str(order['phone']))}", body), Paragraph(f"<b>◆ Delivery Address</b><br/><br/>{html.escape(address)}", body)]
-    ], colWidths=[85 * mm, 85 * mm])
-    info.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#e2e8f0")),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-        ("TOPPADDING", (0, 0), (-1, -1), 10), ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-    ]))
-    story += [info, Spacer(1, 10), Paragraph("◆ Books In This Order", section)]
-
-    data = [["Book", "Code", "Qty", "Unit Price", "Total"]]
-    for item in items:
-        book_name = html.escape(str(item["name"]))
-        author = html.escape(str(item.get("author", "")))
-        data.append([Paragraph(f"▣ <b>{book_name}</b><br/><font color='#667085'>{author}</font>", body), html.escape(str(item["book_id"])), str(item["quantity"]), f"INR {item['unit_price']:.2f}", f"INR {item['line_total']:.2f}"])
-    table = Table(data, colWidths=[72 * mm, 24 * mm, 17 * mm, 29 * mm, 29 * mm], repeatRows=1)
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4338ca")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#dfe3ea")),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("ALIGN", (2, 1), (-1, -1), "RIGHT"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7), ("RIGHTPADDING", (0, 0), (-1, -1), 7),
-        ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-    ]))
-    story += [table, Spacer(1, 10)]
-
-    item_count = sum(int(i["quantity"]) for i in items)
-    summary = Table([
-        [Paragraph(f"<b>◆ ORDER SUMMARY</b><br/>{item_count} book unit(s)<br/><font color='#667085'>All items are confirmed for this order.</font>", body), Paragraph(f"<b>◆ PAYMENT</b><br/>{html.escape(str(order['payment']))}<br/><font color='#667085'>Payment is due on delivery.</font>", body)]
-    ], colWidths=[85 * mm, 85 * mm])
-    summary.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e2e8f0")),
-        ("INNERGRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#e2e8f0")),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 10), ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-        ("TOPPADDING", (0, 0), (-1, -1), 9), ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
-    ]))
-    story += [summary, Spacer(1, 10), Paragraph(f"Grand Total: INR {order['grand_total']:.2f}", total_style), Paragraph(f"Status: Confirmed · {html.escape(str(order['payment']))}", right), Spacer(1, 15)]
-
-    footer_table = Table([
-        [Paragraph("Digital Books Store", footer_title)],
-        [Paragraph("Crafted For Readers, Designed By MJJ-TechWorld", footer)],
-        [Paragraph("Your Data Is Safe & Private • Customer information is used for order processing and store records.", footer)],
-        [Paragraph("© 2026 Digital Books Store. All Rights Reserved. | Order Terms | Privacy Notice | Disclaimer<br/>Designed & Developed By MJJ-TechWorld • Made In India • Support: support@mjjtechworld.com • Version 2.0", footer)]
-    ], colWidths=[170 * mm])
-    footer_table.setStyle(TableStyle([
-        ("LINEABOVE", (0, 0), (-1, 0), 1.2, colors.HexColor("#e2e8f0")),
-        ("TOPPADDING", (0, 0), (-1, 0), 12),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ]))
-    story.append(footer_table)
+    buffer=BytesIO()
+    doc=SimpleDocTemplate(buffer,pagesize=A4,rightMargin=36,leftMargin=36,topMargin=36,bottomMargin=36)
+    styles=getSampleStyleSheet()
+    title=ParagraphStyle("InvoiceTitle",parent=styles["Title"],fontSize=24,leading=28,textColor=colors.HexColor("#4f35c9"),spaceAfter=8)
+    right=ParagraphStyle("Right",parent=styles["Normal"],alignment=TA_RIGHT,fontSize=10)
+    small=ParagraphStyle("Small",parent=styles["Normal"],fontSize=9,textColor=colors.HexColor("#667085"))
+    story=[Paragraph("BOOKNEST",title),Paragraph("Tax Invoice",styles["Heading2"]),Spacer(1,10)]
+    story.append(Table([[Paragraph(f"<b>Order ID</b><br/>{html.escape(str(order['order_id']))}",styles["Normal"]),Paragraph(f"<b>Date</b><br/>{html.escape(str(order['date']))}",right)]],colWidths=[280,230],style=[("VALIGN",(0,0),(-1,-1),"TOP")]))
+    address=", ".join(x for x in [order.get("flat",""),order.get("street",""),order.get("landmark",""),order.get("city",""),f"{order.get('state','')} - {order.get('pin','')}" if order.get("state") else ""] if x)
+    story += [Spacer(1,16),Paragraph("Customer",styles["Heading3"]),Paragraph(f"<b>{html.escape(str(order['customer_name']))}</b><br/>{html.escape(str(order['phone']))}<br/>{html.escape(address)}",styles["Normal"]),Spacer(1,18)]
+    data=[["Book","Code","Qty","Unit Price","Total"]]+[[html.escape(str(i["name"])),html.escape(str(i["book_id"])),str(i["quantity"]),f"₹{i['unit_price']:.2f}",f"₹{i['line_total']:.2f}"] for i in items]
+    table=Table(data,colWidths=[210,75,45,80,80],repeatRows=1)
+    table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#eeeaff")),("TEXTCOLOR",(0,0),(-1,0),colors.HexColor("#392b91")),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("GRID",(0,0),(-1,-1),0.35,colors.HexColor("#e1e4ea")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),7),("RIGHTPADDING",(0,0),(-1,-1),7),("TOPPADDING",(0,0),(-1,-1),7),("BOTTOMPADDING",(0,0),(-1,-1),7)]))
+    story += [table,Spacer(1,18),Paragraph(f"<b>Grand Total: ₹{order['grand_total']:.2f}</b>",right),Spacer(1,8),Paragraph(f"Payment: {html.escape(str(order['payment']))} · Status: Confirmed",small)]
     doc.build(story)
     return buffer.getvalue()
-
