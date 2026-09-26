@@ -79,8 +79,19 @@ def create_imp_files() -> None:
     if not BOOK_DATA_PATH.exists():
         raise FileNotFoundError("BOOKS_DATA.xlsx was not found.")
     if not EMPLS_DATA_PATH.exists():
-        with EMPLS_DATA_PATH.open("w", newline="", encoding="utf-8") as file:
-            csv.writer(file).writerow(["EMP ID", "First Name", "Last Name", "Phone Number", "Username", "Password", "Access"])
+        write_employees([])
+    employees = read_employees()
+    if not any(row.get("Username", "").strip().lower() == "user@" and row.get("Access", "").strip().lower() == "p" for row in employees):
+        employees.append({
+            "EMP ID": next_employee_id(employees),
+            "First Name": "System",
+            "Last Name": "Director",
+            "Phone Number": "0000000000",
+            "Username": "user@",
+            "Password": "12345678",
+            "Access": "p",
+        })
+        write_employees(employees)
     if not CREDT_DATA_PATH.exists():
         CREDT_DATA_PATH.write_text("EMP ID, Code\n", encoding="utf-8")
     if not LOG_DATA_PATH.exists():
@@ -141,6 +152,15 @@ def write_employees(rows: List[Dict[str, str]]) -> None:
         writer = csv.DictWriter(file, fieldnames=headers)
         writer.writeheader()
         writer.writerows(rows)
+
+def next_employee_id(rows: Optional[List[Dict[str, str]]] = None) -> str:
+    employees = rows if rows is not None else read_employees()
+    highest = 100
+    for row in employees:
+        match = re.fullmatch(r"EMP(\d+)", _safe(row.get("EMP ID")).upper())
+        if match:
+            highest = max(highest, int(match.group(1)))
+    return f"EMP{highest + 1:03d}"
 
 
 def authenticate(username: str, password: str, access: str) -> Optional[Dict[str, str]]:

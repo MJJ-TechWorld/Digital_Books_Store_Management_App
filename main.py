@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import base64
 import html
+from collections import defaultdict
+from datetime import datetime
 from typing import Any, Dict, List
 
-import pandas as pd
 import streamlit as st
 
 from function_utils import *
@@ -17,37 +19,59 @@ def money(value: float) -> str:
 
 
 def page_bg(kind: str = "store") -> None:
-    backgrounds = {
-        "store": "linear-gradient(135deg,#eef2ff,#fff7ed 55%,#fdf2f8)",
-        "checkout": "linear-gradient(135deg,#eff6ff,#ecfdf5 55%,#f8fafc)",
-        "staff": "linear-gradient(135deg,#ecfeff,#eff6ff 55%,#f0fdf4)",
-        "director": "linear-gradient(135deg,#eef2ff,#faf5ff 55%,#fff7ed)",
+    themes = {
+        "store": ("#0f172a", "#312e81", "#7c3aed", "#f97316"),
+        "checkout": ("#082f49", "#0f766e", "#2563eb", "#14b8a6"),
+        "staff": ("#083344", "#155e75", "#2563eb", "#06b6d4"),
+        "director": ("#1e1b4b", "#581c87", "#7e22ce", "#f59e0b"),
     }
+    c1, c2, c3, accent = themes.get(kind, themes["store"])
+    svg = f"""<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000' preserveAspectRatio='none'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='{c1}'/><stop offset='.48' stop-color='{c2}'/><stop offset='1' stop-color='{c3}'/></linearGradient><radialGradient id='r'><stop offset='0' stop-color='{accent}' stop-opacity='.30'/><stop offset='1' stop-color='{accent}' stop-opacity='0'/></radialGradient></defs>
+    <rect width='1600' height='1000' fill='url(#g)'/><circle cx='1320' cy='160' r='430' fill='url(#r)'/><circle cx='240' cy='840' r='520' fill='url(#r)'/>
+    <g fill='none' stroke='white' stroke-opacity='.10' stroke-width='2'><path d='M0 180 Q400 20 800 180 T1600 180'/><path d='M0 300 Q400 140 800 300 T1600 300'/><path d='M0 420 Q400 260 800 420 T1600 420'/><path d='M0 540 Q400 380 800 540 T1600 540'/></g>
+    <g fill='white' opacity='.08'><rect x='1160' y='500' width='300' height='190' rx='24' transform='rotate(-12 1160 500)'/><rect x='1260' y='620' width='260' height='165' rx='22' transform='rotate(9 1260 620)'/></g>
+    </svg>"""
+    encoded = base64.b64encode(svg.encode()).decode()
     st.markdown(f"""
     <style>
-    [data-testid="stAppViewContainer"]{{background:{backgrounds.get(kind, backgrounds['store'])};}}
-    [data-testid="stHeader"]{{background:transparent;}}
-    .block-container{{max-width:1450px;padding-top:1rem;padding-bottom:4rem;}}
-    .hero{{padding:34px 38px;border-radius:28px;background:linear-gradient(110deg,#172554,#312e81 58%,#6d28d9);color:white;box-shadow:0 20px 55px rgba(30,41,59,.15);margin-bottom:24px;}}
-    .hero h1{{font-size:clamp(2rem,4vw,3.6rem);margin:0 0 8px;font-weight:850;letter-spacing:-1px;}}
-    .hero p{{margin:0;color:#dbeafe;font-size:1.02rem;max-width:900px;line-height:1.6;}}
-    .section-title{{font-size:1.55rem;font-weight:850;color:#172554;margin:24px 0 12px;}}
-    .product{{background:rgba(255,255,255,.94);border:1px solid #e2e8f0;border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(15,23,42,.06);height:100%;}}
+    [data-testid="stAppViewContainer"]{{background:#f8fafc url("data:image/svg+xml;base64,{encoded}") center top/cover fixed no-repeat;}}
+    [data-testid="stHeader"]{{background:rgba(255,255,255,0)!important;}}
+    [data-testid="stSidebar"]{{background:rgba(248,250,252,.90);backdrop-filter:blur(18px);border-right:1px solid rgba(148,163,184,.20);}}
+    .block-container{{max-width:1480px;padding-top:1.15rem;padding-bottom:4rem;}}
+    .stApp{{background-attachment:fixed!important;}}
+    [data-testid="stSidebar"] .stRadio>div{{gap:8px;}}
+    [data-testid="stSidebar"] [data-baseweb="radio"]{{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.55);border:1px solid rgba(148,163,184,.16);transition:.18s ease;}}
+    [data-testid="stSidebar"] [data-baseweb="radio"]:hover{{background:rgba(255,255,255,.9);transform:translateX(2px);}}
+    .login-shell{{max-width:610px;margin:42px auto 0;}}
+    .login-card{{padding:34px;background:rgba(255,255,255,.96);border:1px solid rgba(255,255,255,.8);border-radius:30px;box-shadow:0 28px 80px rgba(15,23,42,.24);backdrop-filter:blur(22px);}}
+    .login-badge{{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border-radius:999px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);color:#4338ca;font-weight:900;font-size:.78rem;letter-spacing:.3px;}}
+    .login-card h2{{margin:14px 0 6px;color:#111827;font-size:2rem;font-weight:950;letter-spacing:-.7px;}}
+    .login-card p{{color:#64748b;margin-bottom:24px;line-height:1.6;}}
+    .login-security{{margin-top:16px;padding:13px 15px;border-radius:16px;background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;font-size:.82rem;text-align:center;}}
+    .hero{{padding:38px 42px;border:1px solid rgba(255,255,255,.25);border-radius:30px;background:linear-gradient(115deg,rgba(15,23,42,.96),rgba(49,46,129,.93) 58%,rgba(109,40,217,.90));color:white;box-shadow:0 24px 70px rgba(15,23,42,.28);margin-bottom:26px;overflow:hidden;position:relative;}}
+    .hero:after{{content:"";position:absolute;right:-90px;top:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.20),transparent 68%);}}
+    .hero h1{{font-size:clamp(2rem,4vw,3.8rem);margin:0 0 8px;font-weight:900;letter-spacing:-1.5px;position:relative;z-index:1;}}
+    .hero p{{margin:0;color:#dbeafe;font-size:1.04rem;max-width:940px;line-height:1.65;position:relative;z-index:1;}}
+    .section-title{{font-size:1.65rem;font-weight:900;color:#f8fafc;text-shadow:0 2px 12px rgba(15,23,42,.55);margin:24px 0 14px;}}
+    .product,.metric-card,.checkout-card{{background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.92);border-radius:24px;padding:20px;box-shadow:0 16px 42px rgba(15,23,42,.12);backdrop-filter:blur(12px);}}
+    .product{{height:100%;transition:transform .18s ease,box-shadow .18s ease;}}
+    .product:hover{{transform:translateY(-3px);box-shadow:0 22px 48px rgba(15,23,42,.16);}}
     .product h3{{margin:10px 0 4px;color:#172554;font-size:1.08rem;line-height:1.3;}}
-    .pill{{display:inline-block;padding:5px 10px;border-radius:999px;background:#eef2ff;color:#4338ca;font-weight:800;font-size:.72rem;}}
-    .price{{font-size:1.25rem;font-weight:850;color:#6d28d9;margin-top:8px;}}
-    .stock-good{{color:#15803d;font-weight:750;font-size:.84rem;}}
-    .stock-low{{color:#b45309;font-weight:750;font-size:.84rem;}}
-    .stock-out{{color:#b91c1c;font-weight:750;font-size:.84rem;}}
+    .pill{{display:inline-block;padding:6px 11px;border-radius:999px;background:linear-gradient(135deg,#eef2ff,#f5f3ff);color:#4338ca;font-weight:900;font-size:.72rem;}}
+    .price{{font-size:1.3rem;font-weight:900;color:#7c3aed;margin-top:8px;}}
+    .stock-good{{color:#15803d;font-weight:800;font-size:.84rem;}} .stock-low{{color:#b45309;font-weight:800;font-size:.84rem;}} .stock-out{{color:#b91c1c;font-weight:800;font-size:.84rem;}}
     .muted{{color:#64748b;font-size:.88rem;}}
-    .metric-card{{background:rgba(255,255,255,.9);border:1px solid #e2e8f0;border-radius:20px;padding:18px;box-shadow:0 8px 25px rgba(15,23,42,.05);}}
-    .checkout-card{{background:white;border:1px solid #e2e8f0;border-radius:20px;padding:22px;box-shadow:0 12px 32px rgba(15,23,42,.06);}}
-    .success-box{{background:#ecfdf5;border:1px solid #86efac;border-radius:22px;padding:22px;}}
-    .log-card{{background:white;border-left:5px solid #4f46e5;border-radius:14px;padding:13px 16px;margin:8px 0;box-shadow:0 7px 20px rgba(15,23,42,.06);}}
-    .log-action{{font-weight:800;color:#312e81;}}
-    .log-meta{{color:#64748b;font-size:.82rem;margin-top:4px;}}
-    div.stButton>button{{border-radius:12px;font-weight:800;min-height:2.65rem;}}
-    .stTextInput input,.stNumberInput input,.stSelectbox div[data-baseweb="select"]{{border-radius:12px!important;}}
+    .metric-card h2{{color:#312e81;font-weight:900;}}
+    .metric-card p{{color:#475569;line-height:1.6;}}
+    .checkout-card{{background:rgba(255,255,255,.97);}}
+    .success-box{{background:linear-gradient(135deg,#ecfdf5,#f0fdf4);border:1px solid #86efac;border-radius:24px;padding:24px;box-shadow:0 16px 40px rgba(22,101,52,.10);}}
+    .log-card{{background:rgba(255,255,255,.96);border-left:5px solid #4f46e5;border-radius:16px;padding:14px 17px;margin:9px 0;box-shadow:0 10px 26px rgba(15,23,42,.10);}}
+    .log-action{{font-weight:900;color:#312e81;}} .log-meta{{color:#64748b;font-size:.82rem;margin-top:4px;}}
+    div.stButton>button, div.stFormSubmitButton>button{{border-radius:13px!important;font-weight:850!important;min-height:2.75rem!important;box-shadow:0 7px 18px rgba(15,23,42,.08);}}
+    div.stButton>button:hover, div.stFormSubmitButton>button:hover{{transform:translateY(-1px);}}
+    .stTextInput input,.stNumberInput input,.stSelectbox div[data-baseweb="select"]{{border-radius:13px!important;}}
+    [data-testid="stMetric"]{{background:rgba(255,255,255,.88);border:1px solid rgba(226,232,240,.9);padding:12px 14px;border-radius:18px;box-shadow:0 10px 28px rgba(15,23,42,.08);}}
     </style>
     """, unsafe_allow_html=True)
 
@@ -110,6 +134,7 @@ def customer_sidebar() -> None:
         current = st.session_state.get("nav", "Storefront")
         if current not in choices:
             current = "Storefront"
+        st.session_state["customer_nav"] = current
         nav = st.radio("Shop", choices, index=choices.index(current), key="customer_nav")
         st.session_state.nav = nav
         st.divider()
@@ -211,6 +236,7 @@ def customer_cart() -> None:
     st.markdown(f"## Order total: {money(total)}")
     if st.button("Proceed to secure checkout →", type="primary", use_container_width=True, key="proceed_checkout"):
         st.session_state.nav = "Checkout"
+        st.session_state.customer_nav = "Checkout"
         st.rerun()
 
 
@@ -282,29 +308,37 @@ def order_confirmation() -> None:
     if st.button("Continue shopping", type="primary", use_container_width=True, key="continue_shopping"):
         st.session_state.checkout_done = None
         st.session_state.nav = "Storefront"
+        st.session_state.customer_nav = "Storefront"
         st.rerun()
 
 
 def login_page(access: str) -> None:
     kind = "director" if access == "p" else "staff"
     page_bg(kind)
-    title = "Director Command Center" if access == "p" else "Store Clerk Workspace"
-    hero(title, "Sign in with the credentials recorded in EMPLOYEES.csv.", "👑" if access == "p" else "👨‍💼")
-    with st.form(f"login_form_{access}"):
-        username = st.text_input("Username", key=f"login_username_{access}")
-        password = st.text_input("Password", type="password", key=f"login_password_{access}")
-        submitted = st.form_submit_button("Sign in", type="primary", use_container_width=True)
+    is_director = access == "p"
+    title = "Director Command Center" if is_director else "Store Clerk Workspace"
+    subtitle = "Secure access to business intelligence, workforce controls and operational oversight." if is_director else "Secure access to inventory, catalog administration and pricing operations."
+    icon = "👑" if is_director else "👨‍💼"
+    badge = "DIRECTOR ACCESS" if is_director else "STORE OPERATIONS ACCESS"
+    st.markdown('<div class="login-shell"><div class="login-card">', unsafe_allow_html=True)
+    st.markdown(f'<div class="login-badge">{icon} {badge}</div><h2>{html.escape(title)}</h2><p>{html.escape(subtitle)}</p>', unsafe_allow_html=True)
+    with st.form(f"login_form_{access}", clear_on_submit=False):
+        username = st.text_input("Username", placeholder="Enter your username", key=f"login_username_{access}")
+        password = st.text_input("Password", type="password", placeholder="Enter your password", key=f"login_password_{access}")
+        submitted = st.form_submit_button("Sign in securely  →", type="primary", use_container_width=True)
+    st.markdown('<div class="login-security">🔒 Authorized workspace · Credentials are validated against the employee registry.</div></div></div>', unsafe_allow_html=True)
     if submitted:
         employee = authenticate(username, password, access)
         if employee:
             st.session_state.employee = employee
-            st.session_state.role = "p" if access == "p" else "staff"
+            st.session_state.role = "p" if is_director else "staff"
             st.session_state.nav = "Dashboard"
-            log_activity(employee, "Login", "Director" if access == "p" else "Store Clerk")
+            st.session_state[f"workspace_nav_{kind}"] = "Dashboard"
+            log_activity(employee, "Login", "Director" if is_director else "Store Clerk")
             st.rerun()
         else:
             st.error("Incorrect username, password, or access level.")
-    if st.button("← Back", key=f"login_back_{access}", use_container_width=True):
+    if st.button("← Return to main portal", key=f"login_back_{access}", use_container_width=True):
         st.session_state.role = None
         st.session_state.nav = "Home"
         st.rerun()
@@ -324,6 +358,7 @@ def staff_sidebar(kind: str) -> None:
         current = st.session_state.get("nav", "Dashboard")
         if current not in choices:
             current = "Dashboard"
+        st.session_state[f"workspace_nav_{kind}"] = current
         nav = st.radio(label, choices, index=choices.index(current), key=f"workspace_nav_{kind}")
         st.session_state.nav = nav
         st.divider()
@@ -343,8 +378,8 @@ def staff_dashboard() -> None:
     c.metric("Low stock", len(low))
     d.metric("Out of stock", len(out))
     st.markdown("### Inventory overview")
-    df = pd.DataFrame([{"Code": book["code"], "Book": book["name"], "Genre": book["genre"], "Price": money(book["price"]), "Stock": book["stock"]} for book in books])
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    rows = [{"Code": book["code"], "Book": book["name"], "Genre": book["genre"], "Price": money(book["price"]), "Stock": book["stock"]} for book in books]
+    st.dataframe(rows, use_container_width=True, hide_index=True)
 
 
 def add_stock_ui() -> None:
@@ -419,8 +454,8 @@ def pricing_ui() -> None:
     page_bg("staff")
     hero("Pricing desk", "Review market price, wholesale cost and margin across the catalog.", "💰")
     books = read_books()
-    df = pd.DataFrame([{"Code": book["code"], "Book": book["name"], "Wholesale": money(book["wholesale"]), "Market Price": money(book["price"]), "Margin": money(book["margin"])} for book in books])
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    rows = [{"Code": book["code"], "Book": book["name"], "Wholesale": money(book["wholesale"]), "Market Price": money(book["price"]), "Margin": money(book["margin"])} for book in books]
+    st.dataframe(rows, use_container_width=True, hide_index=True)
 
 
 def director_dashboard() -> None:
@@ -443,22 +478,38 @@ def director_dashboard() -> None:
     if not orders:
         st.info("No customer orders have been recorded yet.")
         return
-    df = pd.DataFrame(orders)
-    df["Order Date"] = pd.to_datetime(df["Order Date"], errors="coerce")
-    df["Item Total (INR)"] = pd.to_numeric(df["Item Total (INR)"], errors="coerce").fillna(0)
-    daily = df.dropna(subset=["Order Date"]).groupby(df.dropna(subset=["Order Date"])["Order Date"].dt.date)["Item Total (INR)"].sum()
+    daily = defaultdict(float)
+    normalized_orders = []
+    for order in orders:
+        row = dict(order)
+        raw_date = str(row.get("Order Date") or "").strip()
+        try:
+            order_date = datetime.strptime(raw_date, "%Y-%m-%d %H:%M:%S")
+            row["Order Date"] = order_date.strftime("%Y-%m-%d %H:%M:%S")
+            daily[order_date.date()] += float(row.get("Item Total (INR)") or 0)
+        except (TypeError, ValueError):
+            row["Order Date"] = raw_date
+        try:
+            row["Item Total (INR)"] = float(row.get("Item Total (INR)") or 0)
+        except (TypeError, ValueError):
+            row["Item Total (INR)"] = 0.0
+        normalized_orders.append(row)
     st.markdown("### Revenue trend")
-    st.line_chart(daily)
+    chart_rows = [{"Date": str(day), "Revenue": round(value, 2)} for day, value in sorted(daily.items())]
+    if chart_rows:
+        st.line_chart(chart_rows, x="Date", y="Revenue", height=320)
     st.markdown("### Recent customer orders")
-    st.dataframe(df.tail(20), use_container_width=True, hide_index=True)
+    st.dataframe(normalized_orders[-20:], use_container_width=True, hide_index=True)
 
 
 def employee_management() -> None:
     page_bg("director")
     hero("Employee management", "Create Store Clerk accounts directly. No OTP or secondary registration step.", "👥")
+    rows = read_employees()
+    next_id = next_employee_id(rows)
     with st.form("employee_add_form"):
         a, b = st.columns(2)
-        empid = a.text_input("Employee ID *")
+        a.text_input("Employee ID", value=next_id, disabled=True)
         first = b.text_input("First name *")
         a, b = st.columns(2)
         last = a.text_input("Last name *")
@@ -468,20 +519,21 @@ def employee_management() -> None:
         password = b.text_input("Password *", type="password")
         if st.form_submit_button("Create Store Clerk account", type="primary", use_container_width=True):
             rows = read_employees()
-            duplicate = any(row.get("EMP ID", "").lower() == empid.lower() or row.get("Username", "").lower() == username.lower() for row in rows)
+            empid = next_employee_id(rows)
+            duplicate = any(row.get("Username", "").strip().lower() == username.strip().lower() for row in rows)
             if duplicate:
-                st.error("Employee ID or username already exists.")
-            elif not empid.strip() or not first.strip() or not last.strip() or not phone.isdigit() or len(phone) != 10 or not username.strip() or not password:
+                st.error("That username already exists.")
+            elif not first.strip() or not last.strip() or not phone.isdigit() or len(phone) != 10 or not username.strip() or not password:
                 st.error("Please complete all fields and use a valid 10-digit phone number.")
             else:
-                rows.append({"EMP ID": empid.strip(), "First Name": first.strip(), "Last Name": last.strip(), "Phone Number": phone, "Username": username.strip(), "Password": password, "Access": "s"})
+                rows.append({"EMP ID": empid, "First Name": first.strip(), "Last Name": last.strip(), "Phone Number": phone, "Username": username.strip(), "Password": password, "Access": "s"})
                 write_employees(rows)
                 log_activity(st.session_state.employee, f"Created Store Clerk account {username.strip()}", "Director")
-                st.success("Store Clerk account created successfully.")
+                st.success(f"Store Clerk account {empid} created successfully.")
                 st.rerun()
     rows = read_employees()
     if rows:
-        display = pd.DataFrame(rows).drop(columns=["Password"], errors="ignore")
+        display = [{key: value for key, value in row.items() if key != "Password"} for row in rows]
         st.markdown("### Current workforce")
         st.dataframe(display, use_container_width=True, hide_index=True)
 
