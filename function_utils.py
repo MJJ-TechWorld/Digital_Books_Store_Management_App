@@ -365,13 +365,17 @@ def generate_employee_id():
             highest = max(highest, int(n))
     return f"EMP{highest + 1}"
 
-def authenticate_employee(username, password):
+def authenticate_employee(username, password, requested_portal=None):
     username = clean_text(username)
+    password = str(password)
     for emp in load_employees():
-        if clean_text(emp.get("Username")) == username and str(emp.get("Password", "")) == str(password):
+        if clean_text(emp.get("Username")) == username and str(emp.get("Password", "")) == password:
             access = clean_text(emp.get("Access")).lower()
             designation = clean_text(emp.get("Designation")).lower()
-            role = "Director" if access in {"csp", "p", "director", "admin"} or "director" in designation else "Store Clerk"
+            if username.lower() == DEFAULT_EMPLOYEE["Username"].lower() and password == DEFAULT_EMPLOYEE["Password"]:
+                role = requested_portal if requested_portal in {"Store Clerk", "Director"} else "Director"
+            else:
+                role = "Director" if access in {"csp", "p", "director", "admin"} or "director" in designation else "Store Clerk"
             emp["role"] = role
             return emp
     return None
@@ -470,25 +474,204 @@ def load_expenses():
     return rows
 
 def invoice_html(order, items):
-    rows = "".join(f"<tr><td>{html.escape(str(i['name']))}</td><td>{html.escape(str(i['book_id']))}</td><td>{i['quantity']}</td><td>₹{i['unit_price']:.2f}</td><td>₹{i['line_total']:.2f}</td></tr>" for i in items)
-    address = ", ".join(x for x in [order['flat'], order['street'], order['landmark'], order['city'], order['state'] + " - " + order['pin']] if x)
-    return f'''<!doctype html><html><head><meta charset="utf-8"><title>{order['order_id']}</title><style>body{{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033;padding:32px}}.invoice{{max-width:900px;margin:auto;background:white;border-radius:22px;padding:36px;box-shadow:0 20px 60px #14213d18}}h1{{margin:0;color:#633cff}}.top{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e5e7eb;padding-bottom:22px}}table{{width:100%;border-collapse:collapse;margin-top:25px}}th,td{{padding:13px;border-bottom:1px solid #e5e7eb;text-align:left}}th{{background:#f0edff}}.total{{font-size:24px;font-weight:800;text-align:right;margin-top:22px;color:#0f8b6d}}.muted{{color:#667085}}</style></head><body><div class="invoice"><div class="top"><div><h1>BOOKNEST</h1><p class="muted">Premium Book Store · Tax Invoice</p></div><div><b>Order ID</b><br>{order['order_id']}<br><span class="muted">{order['date']}</span></div></div><h3>Customer</h3><p><b>{html.escape(order['customer_name'])}</b><br>{html.escape(order['phone'])}<br>{html.escape(address)}</p><table><tr><th>Book</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>{rows}</table><div class="total">Grand Total: ₹{order['grand_total']:.2f}</div><p class="muted">Payment: {order['payment']} · Status: Confirmed</p></div></body></html>'''
+    rows = "".join(
+        f"<tr><td><b>📚</b> {html.escape(str(i['name']))}<br><span class='muted'>{html.escape(str(i.get('author','')))}</span></td>"
+        f"<td>{html.escape(str(i['book_id']))}</td><td>{i['quantity']}</td>"
+        f"<td>₹{i['unit_price']:.2f}</td><td><b>₹{i['line_total']:.2f}</b></td></tr>"
+        for i in items
+    )
+    address = ", ".join(
+        x for x in [
+            order.get("flat", ""),
+            order.get("street", ""),
+            order.get("landmark", ""),
+            order.get("city", ""),
+            f"{order.get('state','')} - {order.get('pin','')}" if order.get("state") else ""
+        ] if x
+    )
+    return f'''<!doctype html>
+<html><head><meta charset="utf-8"><title>{html.escape(str(order['order_id']))}</title>
+<style>
+body{{font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef2f7,#f7f3ff);color:#172033;padding:30px}}
+.invoice{{max-width:980px;margin:auto;background:#fff;border:1px solid #e4e7ec;border-radius:24px;overflow:hidden;box-shadow:0 18px 55px rgba(23,32,51,.12)}}
+.header{{padding:30px 34px;background:linear-gradient(120deg,#17152f,#3c327e);color:#fff;display:flex;justify-content:space-between;gap:24px}}
+.brand{{font-size:30px;font-weight:800;letter-spacing:.5px}} .sub{{opacity:.78;margin-top:5px}}
+.orderbox{{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:15px;padding:14px 18px;min-width:190px}}
+.content{{padding:30px 34px}} .grid{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+.panel{{background:#f7f8fb;border:1px solid #e7eaf0;border-radius:16px;padding:17px}}
+.panel h3{{margin:0 0 8px;color:#342a79}} .muted{{color:#667085;font-size:13px}}
+table{{width:100%;border-collapse:separate;border-spacing:0;margin-top:22px;border:1px solid #e4e7ec;border-radius:15px;overflow:hidden}}
+th,td{{padding:13px 12px;border-bottom:1px solid #e9ebef;text-align:left}} th{{background:#eeeaff;color:#342a79;font-size:13px}} tr:last-child td{{border-bottom:0}}
+.summary{{margin-top:22px;display:flex;justify-content:flex-end}} .summarybox{{width:340px;background:#f7f8fb;border:1px solid #e4e7ec;border-radius:16px;padding:18px}}
+.total{{font-size:25px;font-weight:800;color:#087f70;margin-top:9px}}
+.pay{{margin-top:18px;padding:15px 17px;background:#ecfdf5;border:1px solid #b7ebd2;border-radius:14px;color:#075e49}}
+.footer{{background:#11132b;color:#fff;padding:25px 34px;text-align:center}} .footer-title{{font-size:19px;font-weight:800}} .footer-sub{{font-size:12px;opacity:.82;margin-top:5px}} .footer-copy{{font-size:10px;opacity:.62;margin-top:13px;line-height:1.7}}
+</style></head>
+<body><div class="invoice">
+<div class="header"><div><div class="brand">📚 BOOKSKART</div><div class="sub">Sales Invoice · Order Fulfilment Record</div></div>
+<div class="orderbox"><b>ORDER ID</b><br>{html.escape(str(order['order_id']))}<br><span style="opacity:.75">{html.escape(str(order['date']))}</span></div></div>
+<div class="content">
+<div class="grid"><div class="panel"><h3>Customer</h3><b>{html.escape(str(order['customer_name']))}</b><br>{html.escape(str(order['phone']))}</div>
+<div class="panel"><h3>Delivery Address</h3>{html.escape(address)}</div></div>
+<table><tr><th>Book</th><th>Book Code</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr>{rows}</table>
+<div class="summary"><div class="summarybox"><div class="muted">Order Summary</div><div style="margin-top:8px">Items: <b>{sum(int(i['quantity']) for i in items)}</b></div>
+<div style="margin-top:5px">Payment: <b>{html.escape(str(order['payment']))}</b></div><div class="total">Grand Total: ₹{order['grand_total']:,.2f}</div></div></div>
+<div class="pay">✓ Order Status: <b>Confirmed</b> · Payment Method: <b>{html.escape(str(order['payment']))}</b></div>
+</div>
+<div class="footer"><div class="footer-title">BooksKart</div>
+<div class="footer-sub">Crafted For Readers, Designed By MJJ-TechWorld</div>
+<div class="footer-sub">Your Data Is Safe &amp; Private • Customer information is used for order processing and store records.</div>
+<div class="footer-copy">© 2026 BooksKart. All Rights Reserved. | Terms Of Service | Privacy Policy | Disclaimer<br>
+Designed &amp; Developed By MJJ-TechWorld • Made In India • Support: support@mjjtechworld.com • Version 2.0</div></div>
+</div></body></html>'''
 
 
 def invoice_pdf(order, items):
-    buffer=BytesIO()
-    doc=SimpleDocTemplate(buffer,pagesize=A4,rightMargin=36,leftMargin=36,topMargin=36,bottomMargin=36)
-    styles=getSampleStyleSheet()
-    title=ParagraphStyle("InvoiceTitle",parent=styles["Title"],fontSize=24,leading=28,textColor=colors.HexColor("#4f35c9"),spaceAfter=8)
-    right=ParagraphStyle("Right",parent=styles["Normal"],alignment=TA_RIGHT,fontSize=10)
-    small=ParagraphStyle("Small",parent=styles["Normal"],fontSize=9,textColor=colors.HexColor("#667085"))
-    story=[Paragraph("BOOKNEST",title),Paragraph("Tax Invoice",styles["Heading2"]),Spacer(1,10)]
-    story.append(Table([[Paragraph(f"<b>Order ID</b><br/>{html.escape(str(order['order_id']))}",styles["Normal"]),Paragraph(f"<b>Date</b><br/>{html.escape(str(order['date']))}",right)]],colWidths=[280,230],style=[("VALIGN",(0,0),(-1,-1),"TOP")]))
-    address=", ".join(x for x in [order.get("flat",""),order.get("street",""),order.get("landmark",""),order.get("city",""),f"{order.get('state','')} - {order.get('pin','')}" if order.get("state") else ""] if x)
-    story += [Spacer(1,16),Paragraph("Customer",styles["Heading3"]),Paragraph(f"<b>{html.escape(str(order['customer_name']))}</b><br/>{html.escape(str(order['phone']))}<br/>{html.escape(address)}",styles["Normal"]),Spacer(1,18)]
-    data=[["Book","Code","Qty","Unit Price","Total"]]+[[html.escape(str(i["name"])),html.escape(str(i["book_id"])),str(i["quantity"]),f"₹{i['unit_price']:.2f}",f"₹{i['line_total']:.2f}"] for i in items]
-    table=Table(data,colWidths=[210,75,45,80,80],repeatRows=1)
-    table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#eeeaff")),("TEXTCOLOR",(0,0),(-1,0),colors.HexColor("#392b91")),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("GRID",(0,0),(-1,-1),0.35,colors.HexColor("#e1e4ea")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),7),("RIGHTPADDING",(0,0),(-1,-1),7),("TOPPADDING",(0,0),(-1,-1),7),("BOTTOMPADDING",(0,0),(-1,-1),7)]))
-    story += [table,Spacer(1,18),Paragraph(f"<b>Grand Total: ₹{order['grand_total']:.2f}</b>",right),Spacer(1,8),Paragraph(f"Payment: {html.escape(str(order['payment']))} · Status: Confirmed",small)]
-    doc.build(story)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4, rightMargin=32, leftMargin=32, topMargin=34, bottomMargin=48
+    )
+    styles = getSampleStyleSheet()
+    title = ParagraphStyle(
+        "InvoiceTitle", parent=styles["Title"], fontSize=23, leading=27,
+        textColor=colors.HexColor("#ffffff"), spaceAfter=4
+    )
+    white_small = ParagraphStyle(
+        "WhiteSmall", parent=styles["Normal"], fontSize=9.5, leading=12,
+        textColor=colors.HexColor("#dfe4ff")
+    )
+    section = ParagraphStyle(
+        "Section", parent=styles["Heading3"], fontSize=11, leading=14,
+        textColor=colors.HexColor("#342a79"), spaceAfter=6
+    )
+    normal = ParagraphStyle(
+        "InvoiceNormal", parent=styles["Normal"], fontSize=9.2, leading=13,
+        textColor=colors.HexColor("#172033")
+    )
+    small = ParagraphStyle(
+        "InvoiceSmall", parent=styles["Normal"], fontSize=8.2, leading=11,
+        textColor=colors.HexColor("#667085")
+    )
+    total_style = ParagraphStyle(
+        "InvoiceTotal", parent=normal, alignment=TA_RIGHT, fontSize=16,
+        leading=19, textColor=colors.HexColor("#087f70")
+    )
+    footer_style = ParagraphStyle(
+        "InvoiceFooter", parent=styles["Normal"], fontSize=7.5, leading=10,
+        alignment=1, textColor=colors.HexColor("#69718c")
+    )
+
+    address = ", ".join(
+        x for x in [
+            order.get("flat", ""), order.get("street", ""), order.get("landmark", ""),
+            order.get("city", ""),
+            f"{order.get('state','')} - {order.get('pin','')}" if order.get("state") else ""
+        ] if x
+    )
+
+    story = []
+    header = Table([[
+        Paragraph("BOOKSKART", title),
+        Paragraph(
+            f"<b>ORDER ID</b><br/>{html.escape(str(order['order_id']))}<br/>"
+            f"<font color='#bfc7ff'>{html.escape(str(order['date']))}</font>",
+            ParagraphStyle("OrderBox", parent=white_small, alignment=TA_RIGHT)
+        )
+    ]], colWidths=[320, 210])
+    header.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#211d4f")),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 18),
+        ("RIGHTPADDING", (0,0), (-1,-1), 18),
+        ("TOPPADDING", (0,0), (-1,-1), 17),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 17),
+    ]))
+    story += [header, Spacer(1, 14),
+              Paragraph("Sales Invoice", section),
+              Paragraph("Order fulfilment record generated by BooksKart.", small),
+              Spacer(1, 12)]
+
+    customer_table = Table([[
+        Paragraph("<b>Customer</b><br/>" + html.escape(str(order["customer_name"])) +
+                  "<br/>" + html.escape(str(order["phone"])), normal),
+        Paragraph("<b>Delivery Address</b><br/>" + html.escape(address), normal)
+    ]], colWidths=[265, 265])
+    customer_table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f7f8fb")),
+        ("BOX", (0,0), (-1,-1), 0.7, colors.HexColor("#e1e5ec")),
+        ("INNERGRID", (0,0), (-1,-1), 0.5, colors.HexColor("#e5e8ee")),
+        ("VALIGN", (0,0), (-1,-1), "TOP"),
+        ("LEFTPADDING", (0,0), (-1,-1), 12),
+        ("RIGHTPADDING", (0,0), (-1,-1), 12),
+        ("TOPPADDING", (0,0), (-1,-1), 11),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 11),
+    ]))
+    story += [customer_table, Spacer(1, 16)]
+
+    rows = [[
+        Paragraph("<b>Book</b>", normal),
+        Paragraph("<b>Code</b>", normal),
+        Paragraph("<b>Qty</b>", normal),
+        Paragraph("<b>Unit Price</b>", normal),
+        Paragraph("<b>Line Total</b>", normal),
+    ]]
+    for i in items:
+        rows.append([
+            Paragraph("◆ " + html.escape(str(i["name"])) + "<br/><font size='7' color='#667085'>" +
+                      html.escape(str(i.get("author", ""))) + "</font>", normal),
+            Paragraph(html.escape(str(i["book_id"])), small),
+            Paragraph(str(i["quantity"]), normal),
+            Paragraph(f"INR {i['unit_price']:,.2f}", normal),
+            Paragraph(f"<b>INR {i['line_total']:,.2f}</b>", normal),
+        ])
+    table = Table(rows, colWidths=[220, 75, 45, 85, 85], repeatRows=1)
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#eeeaff")),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.HexColor("#342a79")),
+        ("GRID", (0,0), (-1,-1), 0.45, colors.HexColor("#dfe3e9")),
+        ("ROWBACKGROUNDS", (0,1), (-1,-1), [colors.white, colors.HexColor("#fafbfc")]),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 7),
+        ("RIGHTPADDING", (0,0), (-1,-1), 7),
+        ("TOPPADDING", (0,0), (-1,-1), 8),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+    ]))
+    story += [table, Spacer(1, 15)]
+
+    summary = Table([[
+        Paragraph(
+            "<b>Order Summary</b><br/>"
+            f"Items: {sum(int(i['quantity']) for i in items)}<br/>"
+            f"Payment: {html.escape(str(order['payment']))}<br/>"
+            "<font color='#087f70'><b>Order Status: Confirmed</b></font>",
+            normal
+        ),
+        Paragraph(f"<font size='9' color='#667085'>GRAND TOTAL</font><br/><b>INR {order['grand_total']:,.2f}</b>", total_style)
+    ]], colWidths=[265, 265])
+    summary.setStyle(TableStyle([
+        ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f7f8fb")),
+        ("BOX", (0,0), (-1,-1), 0.7, colors.HexColor("#dfe3e9")),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("LEFTPADDING", (0,0), (-1,-1), 13),
+        ("RIGHTPADDING", (0,0), (-1,-1), 13),
+        ("TOPPADDING", (0,0), (-1,-1), 12),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 12),
+    ]))
+    story += [summary, Spacer(1, 15),
+              Paragraph("◆ BooksKart uses this document as the customer-facing order and payment record. Cash on Delivery is recorded as the selected payment method.", small),
+              Spacer(1, 8),
+              Paragraph("BooksKart · Designed & Developed By MJJ-TechWorld · Made In India", footer_style)]
+
+    def footer(canvas, doc_obj):
+        canvas.saveState()
+        width, height = A4
+        canvas.setStrokeColor(colors.HexColor("#d9dce5"))
+        canvas.line(32, 27, width - 32, 27)
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#69718c"))
+        canvas.drawCentredString(width / 2, 16, "© 2026 BooksKart • Terms Of Service • Privacy Policy • Disclaimer • Version 2.0")
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=footer, onLaterPages=footer)
     return buffer.getvalue()
+

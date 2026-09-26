@@ -247,12 +247,12 @@ def employees_page():
     page_bg("director"); sidebar_staff("Director"); emps=load_employees(); st.markdown('<div class="hero"><div class="pill">WORKFORCE MANAGEMENT</div><h1>Employee <span class="gradient-text">Administration</span></h1><p>Employee IDs are generated automatically from the highest existing EMP number.</p></div>',unsafe_allow_html=True)
     st.markdown(f'<div class="metric"><div class="l">Next Employee ID</div><div class="v">{generate_employee_id()}</div></div>',unsafe_allow_html=True)
     with st.form("employee_form"):
-        a,b=st.columns(2); name=a.text_input("Full Name *"); phone=b.text_input("Phone"); a,b=st.columns(2); email=a.text_input("Email"); username=b.text_input("Username *"); a,b,c=st.columns(3); password=a.text_input("Password *",type="password"); designation=b.selectbox("Designation",["Store Clerk","Director"]); access=c.selectbox("Access",["s","csp"])
+        a,b=st.columns(2); name=a.text_input("Full Name *"); phone=b.text_input("Phone"); a,b=st.columns(2); email=a.text_input("Email"); username=b.text_input("Username *"); a,b=st.columns(2); password=a.text_input("Password *",type="password"); designation=b.selectbox("Designation",["Store Clerk","Inventory Manager","Sales Executive","Assistant Manager","Director"])
         if st.form_submit_button("Create Employee →",type="primary",use_container_width=True):
             if not name or not username or not password: st.error("Name, username and password are required.")
             else:
                 try:
-                    rec=create_employee(name,phone,email,username,password,designation,access); log_activity(st.session_state.employee.get("Full Name","Director"),"Employee created",rec['Employee ID']); st.success(f"Employee {rec['Employee ID']} created successfully."); st.rerun()
+                    rec=create_employee(name,phone,email,username,password,designation); log_activity(st.session_state.employee.get("Full Name","Director"),"Employee created",rec['Employee ID']); st.success(f"Employee {rec['Employee ID']} created successfully."); st.rerun()
                 except ValueError as e: st.error(str(e))
     st.markdown('<div class="section-title">Current employees</div>',unsafe_allow_html=True)
     for e in emps: st.markdown(f'<div class="card" style="margin-bottom:10px"><b>{escape(e.get("Employee ID",""))}</b> · {escape(e.get("Full Name",""))} · {escape(e.get("Designation",""))} · @{escape(e.get("Username",""))} · <span class="status-ok">{escape(e.get("Status","Active"))}</span></div>',unsafe_allow_html=True)
