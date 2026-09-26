@@ -26,7 +26,7 @@ EXPENSES_DATA_PATH = BASE_DIR / "EXPENSES.csv"
 CREDT_DATA_PATH = BASE_DIR / "CREDENTIAL.txt"
 ADDRESS_CACHE_PATH = BASE_DIR / "ADDRESS_CACHE.json"
 GEMINI_MODEL = "gemini-3.5-flash-lite"
-DEFAULT_EMPLOYEE = {"Employee ID": "EMP101", "Full Name": "Owner", "Phone": "", "Email": "", "Username": "user@", "Password": "12345678", "Designation": "Director", "Access": "csp", "Status": "Active", "Joined On": datetime.now().strftime("%d-%m-%Y")}
+DEFAULT_EMPLOYEE = {"Employee ID": "EMP101", "Full Name": "Default Director", "Phone": "", "Email": "", "Username": "user@", "Password": "12345678", "Designation": "Director", "Access": "csp", "Status": "Active", "Joined On": datetime.now().strftime("%d-%m-%Y")}
 
 BOOK_HEADERS = ["Book ID", "Book Name", "Author Name", "Genre", "Language", "Published Date", "Wholesale Price", "Market Price", "Profit Margin", "Quantities Available"]
 EMP_HEADERS = ["Employee ID", "Full Name", "Phone", "Email", "Username", "Password", "Designation", "Access", "Status", "Joined On"]
@@ -78,12 +78,21 @@ def _seed_default_employee():
     try:
         if not EMPLS_DATA_PATH.exists():
             return
-        with open(EMPLS_DATA_PATH, newline="", encoding="utf-8") as f:
-            rows=list(csv.reader(f))
-        if len(rows)>1 and any(any(str(x).strip() for x in row) for row in rows[1:]):
-            return
-        with open(EMPLS_DATA_PATH,"w",newline="",encoding="utf-8") as f:
-            w=csv.writer(f); w.writerow(EMP_HEADERS); w.writerow([DEFAULT_EMPLOYEE[h] for h in EMP_HEADERS])
+        with open(EMPLS_DATA_PATH, newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            rows = [dict(row) for row in reader]
+        matched = False
+        for row in rows:
+            if clean_text(row.get("Username", "")).lower() == DEFAULT_EMPLOYEE["Username"].lower():
+                row.update(DEFAULT_EMPLOYEE)
+                matched = True
+                break
+        if not matched:
+            rows.append(dict(DEFAULT_EMPLOYEE))
+        with open(EMPLS_DATA_PATH, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=EMP_HEADERS)
+            writer.writeheader()
+            writer.writerows({header: row.get(header, "") for header in EMP_HEADERS} for row in rows)
     except Exception:
         pass
 
