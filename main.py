@@ -1,290 +1,484 @@
-import streamlit as st
+import os
 from datetime import datetime
-from html import escape
+from pathlib import Path
+
+import streamlit as st
+
 from function_utils import *
 
-st.set_page_config(page_title="BookNest | Store Management", page_icon="📚", layout="wide", initial_sidebar_state="expanded")
+BASE_DIR = Path(__file__).resolve().parent
 ensure_runtime_files()
 
-BG = {
-    "landing":"https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1800&q=82",
-    "customer":"https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1800&q=82",
-    "clerk":"https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1800&q=82",
-    "director":"https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1800&q=82",
-    "records":"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1800&q=82"
-}
+st.set_page_config(page_title="Book Store", page_icon="📚", layout="wide", initial_sidebar_state="collapsed")
 
-st.markdown(f'''<style>
+st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root{{--ink:#172033;--muted:#667085;--purple:#6546f5;--cyan:#12b8a6;--orange:#ff8a3d;--red:#e5484d;--card:rgba(255,255,255,.94)}}
-html,body,[class*="css"]{{font-family:Inter,sans-serif;color:var(--ink)}}
-[data-testid="stAppViewContainer"]{{background:#f5f7fb}}
-[data-testid="stHeader"]{{background:transparent}}
-.block-container{{padding-top:1.4rem;max-width:1450px}}
-.hero{{padding:42px 46px;border-radius:30px;background:linear-gradient(105deg,rgba(255,255,255,.96),rgba(246,244,255,.88)),url('{BG['landing']}') center/cover;box-shadow:0 20px 70px rgba(20,30,70,.12);border:1px solid #fff;margin-bottom:28px}}
-.hero h1{{font-size:clamp(36px,5vw,68px);margin:0;letter-spacing:-2px;color:#241b52;font-weight:800}}.hero p{{font-size:18px;color:#596275;max-width:760px}}
-.section-title{{font-size:28px;font-weight:800;color:#251d52;margin:12px 0 18px}}.gradient-text{{background:linear-gradient(90deg,#6546f5,#12a99b,#ff7a3d);-webkit-background-clip:text;background-clip:text;color:transparent}}
-.card{{background:var(--card);border:1px solid rgba(100,70,245,.10);border-radius:22px;padding:22px;box-shadow:0 12px 38px rgba(23,32,51,.08);height:100%}}
-.metric{{background:linear-gradient(135deg,#fff,#f3f0ff);border:1px solid #e7e1ff;border-radius:20px;padding:20px;box-shadow:0 10px 28px rgba(44,34,100,.07)}}.metric .v{{font-size:30px;font-weight:800;color:#372a8e}}.metric .l{{color:#667085;font-weight:600}}
-.book-card{{background:#fff;border:1px solid #e9eaf0;border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(23,32,51,.07);min-height:230px}}.book-card h3{{color:#241b52;margin-bottom:5px}}.pill{{display:inline-block;padding:6px 11px;border-radius:999px;background:#f0edff;color:#5637d8;font-weight:700;font-size:12px}}
-.status-ok{{color:#087f5b;font-weight:800}}.status-low{{color:#b26a00;font-weight:800}}.status-out{{color:#c92a2a;font-weight:800}}
-[data-testid="stSidebar"]{{background:linear-gradient(180deg,#15132a,#211c47 58%,#2e2564);color:white}}[data-testid="stSidebar"] *{{color:#fff!important}}
-[data-testid="stSidebar"] .stButton>button{{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);color:white!important;border-radius:12px}}
-.stButton>button{{border-radius:13px;border:0;padding:.62rem 1rem;font-weight:700;box-shadow:0 6px 18px rgba(60,45,150,.12)}}
-.stButton>button[kind="primary"]{{background:linear-gradient(90deg,#6546f5,#7a5cf7);color:#fff}}
-.stDownloadButton>button{{border-radius:13px;font-weight:700}}
-div[data-testid="stForm"]{{background:rgba(255,255,255,.9);border-radius:22px;padding:22px;border:1px solid #e7e8ef}}
-</style>''', unsafe_allow_html=True)
+html,body,[class*="css"]{font-family:Inter,sans-serif}
+[data-testid="stAppViewContainer"]{background:linear-gradient(135deg,#f8fbff 0%,#eef4ff 55%,#f8faff 100%)}
+[data-testid="stHeader"]{background:rgba(255,255,255,.72)}
+.block-container{padding-top:2rem;padding-bottom:2rem;max-width:1400px}
+.hero{padding:32px;border-radius:28px;background:linear-gradient(135deg,#173b7a,#3b82f6);color:white;box-shadow:0 16px 40px rgba(23,59,122,.18);margin-bottom:24px}
+.hero h1{font-size:42px;margin:0}.hero p{font-size:16px;opacity:.9}
+.card{background:rgba(255,255,255,.9);border:1px solid #dbe6f5;border-radius:22px;padding:20px;box-shadow:0 8px 28px rgba(31,64,104,.08);height:100%}
+.metric{background:white;border:1px solid #dbe6f5;border-radius:18px;padding:18px;box-shadow:0 6px 20px rgba(31,64,104,.06)}
+.metric .value{font-size:28px;font-weight:800;color:#173b7a}.metric .label{color:#64748b;font-size:13px}
+.book-title{font-weight:800;font-size:18px;color:#173b7a}.muted{color:#64748b}.price{font-size:20px;font-weight:800;color:#0f766e}
+.footer{margin-top:38px;padding:18px 0;border-top:1px solid #dbe6f5;color:#64748b;text-align:center;font-size:12px}
+</style>""", unsafe_allow_html=True)
 
 
-def go(page):
-    st.session_state.page = page
+def gemini_key():
+    try:
+        value = st.secrets.get("GEMINI_API_KEY", "")
+        if value:
+            return value
+    except Exception:
+        pass
+    return os.getenv("GEMINI_API_KEY", "").strip()
+
+
+def footer():
+    st.markdown("<div class='footer'>Book Store Management System · Inventory · Orders · Employee Operations · Records</div>", unsafe_allow_html=True)
+
+
+def hero(title, subtitle):
+    st.markdown(f"<div class='hero'><h1>{title}</h1><p>{subtitle}</p></div>", unsafe_allow_html=True)
+
+
+def metric(label, value):
+    st.markdown(f"<div class='metric'><div class='label'>{label}</div><div class='value'>{value}</div></div>", unsafe_allow_html=True)
+
+
+def set_screen(screen):
+    st.session_state.screen = screen
     st.rerun()
 
-def init():
-    defaults = {"page":"landing","role":None,"employee":None,"cart":{},"order":None,"invoice":None,"customer":None,"restock_book_code":None}
-    for k,v in defaults.items():
-        if k not in st.session_state: st.session_state[k]=v
-init()
 
-def page_bg(kind):
-    st.markdown(f'''<style>[data-testid="stAppViewContainer"]{{background:linear-gradient(rgba(248,250,253,.93),rgba(248,250,253,.96)),url('{BG[kind]}') center/cover fixed}}</style>''', unsafe_allow_html=True)
+def init_state():
+    defaults = {
+        "screen": "home", "role": None, "employee": None, "cart": {}, "checkout": {},
+        "order": None, "invoice_html": None, "invoice_pdf": None, "restock_book_id": None,
+        "address_state": "", "address_district": "", "address_city": ""
+    }
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
-def logout():
-    st.session_state.role=None; st.session_state.employee=None; st.session_state.page="landing"; st.session_state.cart={}; st.session_state.order=None; st.session_state.invoice=None; st.rerun()
 
-def sidebar_customer():
-    with st.sidebar:
-        st.markdown("## 📚 BOOKNEST")
-        st.caption("Customer storefront")
-        st.divider()
-        if st.button("🏠 Storefront", key="cs_store", use_container_width=True): go("customer")
-        if st.button(f"🛒 Cart · {sum(st.session_state.cart.values())}", key="cs_cart", use_container_width=True): go("cart")
-        if st.button("🔐 Secure Checkout", key="cs_checkout", use_container_width=True): go("checkout")
-        st.divider()
-        if st.button("↩ Change Portal", key="cs_logout", use_container_width=True): logout()
-
-def sidebar_staff(role):
-    with st.sidebar:
-        st.markdown("## 📚 BOOKNEST")
-        st.caption(f"{role} Workspace")
-        st.divider()
-        if role=="Store Clerk":
-            nav=[("📊 Dashboard","clerk"),("📦 Inventory Receiving","receiving"),("➕ Add Book","addbook"),("🏷️ Genres","genres"),("💰 Pricing","pricing"),("🧾 Activity Log","activity")]
-        else:
-            nav=[("📊 Executive Dashboard","director"),("👥 Employees","employees"),("📚 Catalog","catalog"),("💰 Pricing","pricing"),("💳 Expenses","expenses"),("🧾 Sales Records","records"),("🧾 Activity Log","activity")]
-        for label,target in nav:
-            if st.button(label,key=f"nav_{role}_{target}",use_container_width=True): go(target)
-        st.divider()
-        if st.button("↩ Logout",key=f"logout_{role}",use_container_width=True): logout()
-
-def landing():
-    page_bg("landing")
-    st.markdown('''<div class="hero"><div class="pill">PREMIUM BOOK STORE MANAGEMENT</div><h1>BOOK<span class="gradient-text">NEST</span></h1><p>A unified storefront and operational command center for customers, store clerks and directors.</p></div>''', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Choose your workspace</div>',unsafe_allow_html=True)
-    c1,c2,c3=st.columns(3)
-    cards=[("🛍️","Customer","Explore the catalog, build your cart and place a Cash on Delivery order."),("📦","Store Clerk","Manage receiving, stock, books, genres, pricing and daily activity."),("🏢","Director","Monitor business performance, employees, sales, expenses and catalog control.")]
-    for col,(icon,title,desc) in zip((c1,c2,c3),cards):
+def home():
+    hero("📚 Book Store", "Select an access area to continue")
+    cols = st.columns(3)
+    options = [
+        ("Customer", "Browse books, manage cart and place an order", "🛍️", "customer"),
+        ("Store Clerk", "Inventory, receiving, catalog and store operations", "📦", "clerk_login"),
+        ("Director", "Business records, employees, expenses and controls", "📊", "director_login")
+    ]
+    for col, (title, desc, icon, screen) in zip(cols, options):
         with col:
-            st.markdown(f'<div class="card"><div style="font-size:42px">{icon}</div><h2>{title}</h2><p style="color:#667085;min-height:68px">{desc}</p></div>',unsafe_allow_html=True)
-            if st.button(f"Continue as {title}",key=f"role_{title}",type="primary",use_container_width=True):
-                if title=="Customer": go("customer")
-                else: st.session_state.login_role=title; go("login")
+            st.markdown(f"<div class='card'><div style='font-size:42px'>{icon}</div><h2>{title}</h2><p class='muted'>{desc}</p></div>", unsafe_allow_html=True)
+            if st.button(f"Continue as {title}", use_container_width=True, key=f"home_{screen}"):
+                set_screen(screen)
+    footer()
 
-def login():
-    page_bg("clerk" if st.session_state.get("login_role")=="Store Clerk" else "director")
-    role=st.session_state.get("login_role","Store Clerk")
-    st.markdown(f'<div class="hero"><div class="pill">SECURE ACCESS</div><h1>{role} <span class="gradient-text">Portal</span></h1><p>Sign in using the credentials maintained in EMPLOYEES.csv.</p></div>',unsafe_allow_html=True)
-    _,mid,_=st.columns([1,1.2,1])
-    with mid:
-        with st.form("login_form"):
-            username=st.text_input("Username")
-            password=st.text_input("Password",type="password")
-            if st.form_submit_button("Sign In →",type="primary",use_container_width=True):
-                emp=authenticate_employee(username,password)
-                if emp and emp["role"]==role:
-                    st.session_state.employee=emp; st.session_state.role=role; log_activity(emp.get("Full Name",username),"Logged in",role); go("clerk" if role=="Store Clerk" else "director")
-                else: st.error("Invalid credentials or insufficient access.")
-        if st.button("← Back",use_container_width=True): go("landing")
 
-def customer():
-    page_bg("customer"); sidebar_customer()
-    books=load_books(); genres=load_genres()
-    st.markdown('<div class="hero"><div class="pill">CUSTOMER STOREFRONT</div><h1>Find your next <span class="gradient-text">great read.</span></h1><p>Search the live catalog, filter by genre and add available books directly to your cart.</p></div>',unsafe_allow_html=True)
-    a,b,c=st.columns([2,1,1]); search=a.text_input("Search books, authors or codes",key="cust_search"); genre=b.selectbox("Genre",["All Genres"]+genres); availability=c.selectbox("Availability",["All Books","In Stock","Out of Stock"])
-    filtered=[x for x in books if (not search or search.lower() in f"{x['name']} {x['author']} {x['id']}".lower()) and (genre=="All Genres" or x['genre']==genre) and (availability=="All Books" or (availability=="In Stock" and x['stock']>0) or (availability=="Out of Stock" and x['stock']==0))]
-    st.caption(f"{len(filtered)} books found · {sum(st.session_state.cart.values())} item(s) in cart")
-    for start in range(0,len(filtered),3):
-        cols=st.columns(3)
-        for col,bk in zip(cols,filtered[start:start+3]):
+def customer_store():
+    hero("📖 Book Catalogue", "Search the available collection and add books to your cart")
+    books = load_books()
+    genres = ["All Genres"] + get_genres()
+    c1, c2, c3 = st.columns([2, 1, 1])
+    with c1:
+        query = st.text_input("Search", placeholder="Book name, author or book ID")
+    with c2:
+        genre = st.selectbox("Genre", genres)
+    with c3:
+        only_available = st.checkbox("Show available only", value=True)
+    filtered = []
+    for book in books:
+        match = query.lower() in f"{book['title']} {book['author']} {book['id']}".lower()
+        genre_match = genre == "All Genres" or book["genre"].lower() == genre.lower()
+        stock_match = not only_available or book["stock"] > 0
+        if match and genre_match and stock_match:
+            filtered.append(book)
+    if not filtered:
+        st.info("No matching books found.")
+    for start in range(0, len(filtered), 4):
+        cols = st.columns(4)
+        for col, book in zip(cols, filtered[start:start+4]):
             with col:
-                status="Out of Stock" if bk['stock']==0 else ("Low Stock" if bk['stock']<=2 else "Healthy")
-                cls="status-out" if bk['stock']==0 else ("status-low" if bk['stock']<=2 else "status-ok")
-                st.markdown(f'''<div class="book-card"><span class="pill">{escape(bk['genre'])}</span><h3>{escape(bk['name'])}</h3><p style="color:#667085">{escape(bk['author'])}</p><p><b>₹{bk['price']:.2f}</b> · <span class="{cls}">{status}</span></p><small>{escape(bk['id'])} · {escape(bk['language'])}</small></div>''',unsafe_allow_html=True)
-                if st.button("Add to Cart",key=f"add_{bk['id']}",disabled=bk['stock']<=0,use_container_width=True):
-                    st.session_state.cart[bk['id']]=min(st.session_state.cart.get(bk['id'],0)+1,bk['stock']); st.toast("Added to cart"); st.rerun()
+                st.markdown(f"<div class='card'><div class='book-title'>{book['title']}</div><div class='muted'>{book['author']}</div><div class='muted'>{book['genre']}</div><br><div class='price'>{money(book['price'])}</div><div class='muted'>Stock: {book['stock']} · {stock_status(book['stock'])}</div></div>", unsafe_allow_html=True)
+                qty = st.number_input("Quantity", min_value=1, max_value=max(1, book["stock"]), value=1, key=f"qty_{book['id']}", disabled=book["stock"] == 0)
+                if st.button("Add to Cart", key=f"add_{book['id']}", use_container_width=True, disabled=book["stock"] == 0):
+                    st.session_state.cart[book["id"]] = min(book["stock"], st.session_state.cart.get(book["id"], 0) + qty)
+                    st.toast(f"Added {book['title']}")
+    st.divider()
+    cart_count = sum(st.session_state.cart.values())
+    if st.button(f"🛒 Cart · {cart_count} item(s)", use_container_width=True, type="primary"):
+        set_screen("cart")
+    footer()
+
 
 def cart_page():
-    page_bg("customer"); sidebar_customer(); st.markdown('<div class="hero"><div class="pill">YOUR CART</div><h1>Review your <span class="gradient-text">selection.</span></h1></div>',unsafe_allow_html=True)
-    if not st.session_state.cart: st.info("Your cart is empty.");
-    books={b['id']:b for b in load_books()}; total=0
-    for bid,qty in list(st.session_state.cart.items()):
-        b=books.get(bid)
-        if not b: continue
-        line=b['price']*qty; total+=line
-        c1,c2,c3,c4=st.columns([3,1,1,1]); c1.markdown(f"**{b['name']}**  \\n{b['author']} · {bid}"); c2.write(f"₹{b['price']:.2f}"); newqty=c3.number_input("Qty",1,min(b['stock'],10),qty,key=f"qty_{bid}");
-        if newqty!=qty: st.session_state.cart[bid]=newqty; st.rerun()
-        if c4.button("Remove",key=f"rm_{bid}"): del st.session_state.cart[bid]; st.rerun()
-    st.markdown(f'<div class="metric"><div class="l">Cart Total</div><div class="v">₹{total:,.2f}</div></div>',unsafe_allow_html=True)
-    if st.session_state.cart and st.button("Proceed to Secure Checkout →",type="primary",use_container_width=True): go("checkout")
+    hero("🛒 Your Cart", "Review quantities before checkout")
+    books = {b["id"]: b for b in load_books()}
+    if not st.session_state.cart:
+        st.info("Your cart is empty.")
+        if st.button("Continue Shopping"):
+            set_screen("customer")
+        footer()
+        return
+    total = 0
+    for book_id, qty in list(st.session_state.cart.items()):
+        book = books.get(book_id)
+        if not book:
+            st.session_state.cart.pop(book_id, None)
+            continue
+        line = book["price"] * qty
+        total += line
+        c1, c2, c3 = st.columns([5, 2, 2])
+        c1.write(f"**{book['title']}** · {book['author']}")
+        new_qty = c2.number_input("Qty", min_value=1, max_value=max(1, book["stock"]), value=min(qty, max(1, book["stock"])), key=f"cart_qty_{book_id}")
+        st.session_state.cart[book_id] = new_qty
+        if c3.button("Remove", key=f"remove_{book_id}"):
+            st.session_state.cart.pop(book_id, None)
+            st.rerun()
+        st.caption(f"{money(book['price'])} × {new_qty} = {money(book['price'] * new_qty)}")
+    st.markdown(f"### Order Total: {money(total)}")
+    c1, c2 = st.columns(2)
+    if c1.button("Continue Shopping", use_container_width=True):
+        set_screen("customer")
+    if c2.button("Proceed to Secure Checkout", type="primary", use_container_width=True):
+        set_screen("checkout")
+    footer()
 
-def checkout():
-    page_bg("customer"); sidebar_customer()
-    if not st.session_state.cart: go("cart")
-    books={b['id']:b for b in load_books()}; total=sum(books[k]['price']*v for k,v in st.session_state.cart.items() if k in books)
-    st.markdown('<div class="hero"><div class="pill">SECURE CHECKOUT · COD</div><h1>Complete your <span class="gradient-text">delivery.</span></h1><p>Enter customer and delivery details. Your information is cleaned and formatted before being stored in the sales record.</p></div>',unsafe_allow_html=True)
-    with st.form("checkout_form"):
-        st.markdown("### Customer details")
-        a,b=st.columns(2); name=a.text_input("Full Name *"); phone=b.text_input("Phone *",max_chars=10)
-        st.markdown("### Delivery address")
-        a,b=st.columns(2); flat=a.text_input("Flat / House / Building *"); street=b.text_input("Street / Area *")
-        a,b,c=st.columns(3); landmark=a.text_input("Landmark"); city=b.text_input("City *"); state=c.text_input("State *")
-        pin=st.text_input("PIN *",max_chars=6)
-        st.markdown('<div class="metric"><div class="l">Payment Method</div><div class="v" style="font-size:22px">Cash on Delivery</div></div>',unsafe_allow_html=True)
-        if st.form_submit_button(f"Place Order · ₹{total:,.2f}",type="primary",use_container_width=True):
-            if not name or not phone.isdigit() or len(phone)!=10 or not flat or not street or not city or not state or not pin.isdigit() or len(pin)!=6: st.error("Please complete all required fields with valid phone and PIN values.")
-            else:
-                items=[]
-                for bid,qty in st.session_state.cart.items():
-                    b=books.get(bid)
-                    if not b or b['stock']<qty: st.error(f"Insufficient stock for {b['name'] if b else bid}."); return
-                    items.append({"book_id":bid,"name":b['name'],"author":b['author'],"genre":b['genre'],"quantity":qty,"unit_price":b['price'],"cost_price":b['cost'],"line_total":round(b['price']*qty,2),"line_profit":round((b['price']-b['cost'])*qty,2)})
-                order={"order_id":new_order_id(),"date":datetime.now().strftime("%d-%m-%Y %H:%M:%S"),"customer_name":clean_name(name),"phone":phone,"flat":clean_address(flat),"street":clean_address(street),"landmark":clean_address(landmark),"city":clean_name(city),"state":clean_name(state),"pin":pin,"payment":"Cash on Delivery","grand_total":round(sum(i['line_total'] for i in items),2),"grand_profit":round(sum(i['line_profit'] for i in items),2)}
-                if reduce_stock(items):
-                    append_order(order,items); log_activity(order['customer_name'],"Order placed",order['order_id']); st.session_state.order=order; st.session_state.invoice=invoice_html(order,items); st.session_state.cart={}; go("confirmation")
 
-def confirmation():
-    page_bg("customer"); sidebar_customer(); order=st.session_state.get("order")
-    if not order: go("customer")
-    st.markdown(f'<div class="hero"><div class="pill">ORDER CONFIRMED</div><h1>Thank you, <span class="gradient-text">{escape(order["customer_name"])}.</span></h1><p>Your order <b>{order["order_id"]}</b> has been recorded successfully.</p></div>',unsafe_allow_html=True)
-    st.markdown(f'<div class="metric"><div class="l">Order Total · Cash on Delivery</div><div class="v">₹{order["grand_total"]:,.2f}</div></div>',unsafe_allow_html=True)
-    if st.session_state.get("invoice"):
-        st.download_button("⬇ Download Professional Bill",st.session_state.invoice,file_name=f"{order['order_id']}.html",mime="text/html",use_container_width=True)
-        st.components.v1.html(st.session_state.invoice,height=760,scrolling=True)
-    if st.button("Continue Shopping →",type="primary",use_container_width=True): go("customer")
+def address_selectors():
+    key = gemini_key()
+    if not key:
+        st.error("GEMINI_API_KEY is not configured. Add it to Streamlit Secrets or the environment.")
+        return None, None, None, None
+    try:
+        states = gemini_address_options(key, "states")
+    except Exception as exc:
+        st.error(str(exc))
+        return None, None, None, None
+    state = st.selectbox("State / Union Territory", [""] + states, key="address_state_select")
+    if state != st.session_state.address_state:
+        st.session_state.address_state = state
+        st.session_state.address_district = ""
+        st.session_state.address_city = ""
+    if not state:
+        return state, "", "", ""
+    districts = gemini_address_options(key, "districts", state=state)
+    district = st.selectbox("District", [""] + districts, key="address_district_select")
+    if district != st.session_state.address_district:
+        st.session_state.address_district = district
+        st.session_state.address_city = ""
+    if not district:
+        return state, district, "", ""
+    cities = gemini_address_options(key, "cities", state=state, district=district)
+    city = st.selectbox("City / Town", [""] + cities, key="address_city_select")
+    if city != st.session_state.address_city:
+        st.session_state.address_city = city
+    if not city:
+        return state, district, city, ""
+    pins = gemini_address_options(key, "pins", state=state, district=district, city=city)
+    pin = st.selectbox("PIN Code", [""] + pins, key="address_pin_select")
+    return state, district, city, pin
+
+
+def checkout_page():
+    hero("🧾 Checkout", "Enter delivery details and confirm Cash on Delivery")
+    books = {b["id"]: b for b in load_books()}
+    if not st.session_state.cart:
+        set_screen("customer")
+        return
+    c1, c2 = st.columns(2)
+    with c1:
+        name = st.text_input("Full Name")
+        phone = st.text_input("Phone Number", max_chars=10)
+        flat = st.text_input("Flat / House / Building")
+        street = st.text_input("Street / Area")
+        landmark = st.text_input("Landmark (Optional)")
+    with c2:
+        state, district, city, pin = address_selectors()
+        st.text_input("Payment Method", value="Cash on Delivery", disabled=True)
+    submit = st.button("Place Order", type="primary", use_container_width=True)
+    if submit:
+        name = title_case_text(name)
+        phone = clean_text(phone)
+        flat = clean_address(flat)
+        street = clean_address(street)
+        landmark = clean_address(landmark)
+        if not name or not phone.isdigit() or len(phone) != 10 or not flat or not street or not state or not district or not city or not pin:
+            st.error("Please complete all required customer and address fields.")
+            return
+        items = []
+        total = 0
+        profit = 0
+        fresh_books = {b["id"]: b for b in load_books()}
+        for book_id, qty in st.session_state.cart.items():
+            book = fresh_books.get(book_id)
+            if not book or book["stock"] < qty:
+                st.error(f"Insufficient stock for {book['title'] if book else book_id}.")
+                return
+            line_total = book["price"] * qty
+            line_profit = (book["price"] - book["cost"]) * qty
+            total += line_total
+            profit += line_profit
+            items.append({"id": book["id"], "title": book["title"], "author": book["author"], "genre": book["genre"], "quantity": qty, "unit_price": book["price"], "unit_cost": book["cost"], "line_total": line_total, "line_profit": line_profit})
+        order = {"order_id": generate_order_id(), "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "customer_name": name, "phone": phone, "flat": flat, "street": street, "landmark": landmark or "-", "city": city, "district": district, "state": state, "pin": pin, "total": total, "profit": profit}
+        for item in items:
+            change_book_stock(item["id"], -item["quantity"])
+        append_order_records(order, items)
+        append_activity({"Full Name": "Customer"}, "Order placed", order["order_id"])
+        st.session_state.cart = {}
+        st.session_state.order = {"order": order, "items": items}
+        st.session_state.invoice_html = build_invoice_html(order, items)
+        st.session_state.invoice_pdf = build_invoice_pdf(order, items)
+        set_screen("confirmation")
+    footer()
+
+
+def confirmation_page():
+    order_data = st.session_state.get("order")
+    if not order_data:
+        set_screen("customer")
+        return
+    order = order_data["order"]
+    items = order_data["items"]
+    hero("✅ Order Confirmed", f"Order {order['order_id']} has been recorded")
+    metric("Order Total", money(order["total"]))
+    st.markdown(f"**Customer:** {order['customer_name']}<br>**Delivery:** {order['city']}, {order['district']}, {order['state']} - {order['pin']}<br>**Payment:** Cash on Delivery", unsafe_allow_html=True)
+    st.markdown("### Items")
+    for item in items:
+        st.write(f"{item['title']} · {item['quantity']} × {money(item['unit_price'])} = **{money(item['line_total'])}**")
+    st.download_button("Download Invoice HTML", st.session_state.invoice_html, file_name=f"{order['order_id']}.html", mime="text/html", use_container_width=True)
+    st.download_button("Download Invoice PDF", st.session_state.invoice_pdf, file_name=f"{order['order_id']}.pdf", mime="application/pdf", use_container_width=True)
+    if st.button("Back to Store", type="primary", use_container_width=True):
+        set_screen("customer")
+    footer()
+
+
+def login_page(role):
+    title = "Store Clerk Login" if role == "sd" else "Director Login"
+    hero("🔐 " + title, "Enter your employee credentials")
+    with st.form(f"login_{role}"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+    if submit:
+        employee = authenticate_employee(username, password)
+        if not employee:
+            st.error("Invalid username or password.")
+        elif role not in employee.get("Access", ""):
+            st.error("This account does not have access to this workspace.")
+        else:
+            st.session_state.employee = employee
+            st.session_state.role = role
+            append_activity(employee, "Logged in")
+            set_screen("clerk" if role == "sd" else "director")
+    if st.button("Back"):
+        set_screen("home")
+    footer()
+
+
+def logout():
+    if st.session_state.employee:
+        append_activity(st.session_state.employee, "Logged out")
+    st.session_state.employee = None
+    st.session_state.role = None
+    set_screen("home")
+
 
 def clerk_dashboard():
-    page_bg("clerk"); sidebar_staff("Store Clerk"); books=load_books(); out=[b for b in books if b['stock']==0]; low=[b for b in books if 0<b['stock']<=2]; total=len(books); units=sum(b['stock'] for b in books)
-    st.markdown('<div class="hero"><div class="pill">STORE CLERK WORKSPACE</div><h1>Inventory <span class="gradient-text">Command Center</span></h1><p>Receive stock, maintain catalog data and monitor availability in real time.</p></div>',unsafe_allow_html=True)
-    cols=st.columns(4)
-    for c,label,val in zip(cols,["Catalog","Units on Hand","Low Stock","Out of Stock"],[total,units,len(low),len(out)]): c.markdown(f'<div class="metric"><div class="l">{label}</div><div class="v">{val}</div></div>',unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Out-of-stock queue</div>',unsafe_allow_html=True)
-    if not out: st.success("No books are currently out of stock.")
-    for b in out:
-        c1,c2,c3=st.columns([4,2,1]); c1.markdown(f"**{b['name']}**  · {b['id']}  \\n{b['author']}"); c2.markdown('<span class="status-out">0 copies · Out of Stock</span>',unsafe_allow_html=True)
-        if c3.button("📥 Restock",key=f"restock_{b['id']}"): st.session_state.restock_book_code=b['id']; go("receiving")
-    st.markdown('<div class="section-title">Low-stock queue</div>',unsafe_allow_html=True)
-    for b in low: st.markdown(f'<div class="card" style="margin-bottom:10px"><b>{escape(b["name"])}</b> · {escape(b["id"])} · <span class="status-low">{b["stock"]} copies</span></div>',unsafe_allow_html=True)
+    employee = st.session_state.employee
+    hero("📦 Store Clerk", f"Signed in as {employee.get('Full Name', employee.get('Username', ''))}")
+    books = load_books()
+    out = [b for b in books if b["stock"] == 0]
+    low = [b for b in books if 0 < b["stock"] <= 2]
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: metric("Books", len(books))
+    with c2: metric("Out of Stock", len(out))
+    with c3: metric("Low Stock", len(low))
+    with c4: metric("Genres", len(get_genres()))
+    st.markdown("### Out-of-Stock Books")
+    if not out:
+        st.success("No books are currently out of stock.")
+    for book in out:
+        c1, c2, c3 = st.columns([5, 2, 1])
+        c1.write(f"**{book['title']}** · {book['author']} · {book['id']}")
+        c2.write("Quantity: 0")
+        if c3.button("📥 Restock", key=f"restock_{book['id']}"):
+            st.session_state.restock_book_id = book["id"]
+            set_screen("receiving")
+    st.markdown("### Store Operations")
+    c1, c2, c3, c4 = st.columns(4)
+    if c1.button("Inventory Receiving", use_container_width=True): set_screen("receiving")
+    if c2.button("Catalog", use_container_width=True): set_screen("catalog")
+    if c3.button("Genres", use_container_width=True): set_screen("genres")
+    if c4.button("Activity Log", use_container_width=True): set_screen("activity")
+    if st.button("Log Out", use_container_width=True): logout()
+    footer()
 
-def receiving():
-    page_bg("clerk"); sidebar_staff("Store Clerk"); books=load_books(); mapping={b['id']:b['name'] for b in books}; ids=list(mapping); pre=st.session_state.get("restock_book_code"); default=ids.index(pre) if pre in ids else 0
-    st.markdown('<div class="hero"><div class="pill">INVENTORY RECEIVING</div><h1>Receive <span class="gradient-text">New Stock</span></h1><p>Update available copies while keeping a clear operational activity trail.</p></div>',unsafe_allow_html=True)
-    with st.form("receiving_form"):
-        bid=st.selectbox("Book",ids,index=default,format_func=lambda x:f"{x} · {mapping[x]}"); copies=st.number_input("Copies received",min_value=1,step=1,value=1)
-        if st.form_submit_button("Confirm Stock Receipt →",type="primary",use_container_width=True):
-            b=add_stock(bid,copies); log_activity(st.session_state.employee.get("Full Name","Store Clerk"),"Stock received",f"{bid} +{copies}"); st.session_state.restock_book_code=None; st.toast(f"{copies} copies added to {b['name']}"); go("clerk")
 
-def addbook():
-    page_bg("clerk"); sidebar_staff("Store Clerk"); genres=load_genres(); st.markdown('<div class="hero"><div class="pill">CATALOG CONTROL</div><h1>Add a <span class="gradient-text">New Book</span></h1></div>',unsafe_allow_html=True)
-    with st.form("add_book_form"):
-        a,b=st.columns(2); name=a.text_input("Book Name *"); author=b.text_input("Author Name *"); a,b=st.columns(2); genre=a.selectbox("Genre",genres); language=b.text_input("Language",value="English"); published=st.text_input("Published Date"); a,b,c=st.columns(3); cost=a.number_input("Wholesale / Cost Price",min_value=0.0,step=1.0); price=b.number_input("Market Price",min_value=0.0,step=1.0); stock=c.number_input("Opening Stock",min_value=0,step=1); 
-        if st.form_submit_button("Create Book →",type="primary",use_container_width=True):
-            if not name or not author: st.error("Book name and author are required.")
-            else:
-                used={b['id'] for b in load_books()}; n=1
-                while f"BK{n:04d}" in used:n+=1
-                book={"id":f"BK{n:04d}","name":clean_text(name),"author":clean_name(author),"genre":genre,"language":clean_text(language),"published":clean_text(published),"cost":money(cost),"price":money(price),"profit":money(price-cost),"stock":integer(stock)}
-                add_book(book); log_activity(st.session_state.employee.get("Full Name","Store Clerk"),"Book added",book['id']); go("clerk")
+def receiving_page():
+    hero("📥 Inventory Receiving", "Record newly received copies and update stock")
+    books = load_books()
+    ids = [b["id"] for b in books]
+    current_id = st.session_state.restock_book_id if st.session_state.restock_book_id in ids else ids[0] if ids else ""
+    selected = st.selectbox("Book", ids, index=ids.index(current_id) if current_id in ids else 0, format_func=lambda x: next((b["title"] + " · " + x for b in books if b["id"] == x), x)) if ids else ""
+    qty = st.number_input("Copies Received", min_value=1, step=1)
+    if st.button("Update Stock", type="primary", use_container_width=True) and selected:
+        new_stock = change_book_stock(selected, qty)
+        book = next(b for b in books if b["id"] == selected)
+        append_activity(st.session_state.employee, "Inventory received", f"{book['title']} +{qty}, new stock {new_stock}")
+        st.session_state.restock_book_id = None
+        st.success(f"Stock updated to {new_stock}.")
+        st.rerun()
+    if st.button("Back to Dashboard", use_container_width=True): set_screen("clerk")
+    footer()
 
-def genres():
-    page_bg("clerk"); sidebar_staff("Store Clerk"); st.markdown('<div class="hero"><div class="pill">CATALOG TAXONOMY</div><h1>Manage <span class="gradient-text">Genres</span></h1></div>',unsafe_allow_html=True)
-    with st.form("genre_form"):
-        g=st.text_input("New genre");
-        if st.form_submit_button("Add Genre →",type="primary"):
-            if add_genre(g): log_activity(st.session_state.employee.get("Full Name","Store Clerk"),"Genre added",clean_name(g)); st.rerun()
-            else: st.error("Genre already exists or is invalid.")
-    st.write(" · ".join(load_genres()))
 
-def pricing():
-    role=st.session_state.role; page_bg("clerk" if role=="Store Clerk" else "director"); sidebar_staff(role); books=load_books(); st.markdown('<div class="hero"><div class="pill">PRICING CONTROL</div><h1>Catalog <span class="gradient-text">Rates</span></h1></div>',unsafe_allow_html=True)
-    for b in books:
-        c1,c2,c3,c4=st.columns([3,1,1,1]); c1.write(f"**{b['name']}** · {b['id']}"); c2.write(f"₹{b['price']:.2f}"); c3.write(f"Cost ₹{b['cost']:.2f}");
-        new=c4.number_input("Price",min_value=0.0,value=float(b['price']),step=1.0,key=f"price_{b['id']}",label_visibility="collapsed")
-        if new!=b['price'] and c4.button("Save",key=f"saveprice_{b['id']}"): update_book(b['id'],price=money(new),profit=money(new-b['cost'])); log_activity(st.session_state.employee.get("Full Name",role),"Price updated",b['id']); st.rerun()
+def catalog_page():
+    hero("📚 Catalog", "View the current book collection and stock")
+    books = load_books()
+    for book in books:
+        st.write(f"**{book['title']}** · {book['author']} · {book['genre']} · {money(book['price'])} · Stock {book['stock']} · {stock_status(book['stock'])}")
+    if st.button("Back to Dashboard"): set_screen("clerk")
+    footer()
 
-def activity():
-    role=st.session_state.role; page_bg("clerk" if role=="Store Clerk" else "records"); sidebar_staff(role); st.markdown('<div class="hero"><div class="pill">AUDIT TRAIL</div><h1>Activity <span class="gradient-text">Log</span></h1></div>',unsafe_allow_html=True)
-    for i,line in enumerate(load_logs(),1): st.markdown(f'<div class="card" style="margin-bottom:10px;padding:15px">🧾 {escape(line)}</div>',unsafe_allow_html=True)
 
-def director():
-    page_bg("director"); sidebar_staff("Director"); sales=load_sales(); expenses=load_expenses(); revenue=sum(money(x.get('Line Total')) for x in sales); profit=sum(money(x.get('Line Profit')) for x in sales); exp=sum(money(x.get('Amount')) for x in expenses); books=load_books(); inventory=sum(b['stock'] for b in books); employees=load_employees()
-    st.markdown('<div class="hero"><div class="pill">DIRECTOR CONTROL ROOM</div><h1>Business <span class="gradient-text">Overview</span></h1><p>Executive visibility across sales, margin, inventory and workforce operations.</p></div>',unsafe_allow_html=True)
-    cols=st.columns(5)
-    for c,l,v in zip(cols,["Revenue","Gross Profit","Expenses","Inventory Units","Employees"],[revenue,profit,exp,inventory,len(employees)]): c.markdown(f'<div class="metric"><div class="l">{l}</div><div class="v">{("₹"+format(v,",.2f")) if isinstance(v,float) else v}</div></div>',unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Operational snapshot</div>',unsafe_allow_html=True)
-    a,b,c=st.columns(3); a.markdown(f'<div class="card"><h3>Catalog</h3><p>{len(books)} active books</p><p>{sum(b["stock"]==0 for b in books)} out of stock</p></div>',unsafe_allow_html=True); b.markdown(f'<div class="card"><h3>Orders</h3><p>{len(set(str(x.get("Order ID")) for x in sales))} orders</p><p>COD enabled</p></div>',unsafe_allow_html=True); c.markdown(f'<div class="card"><h3>Margin</h3><p>Gross profit ₹{profit:,.2f}</p><p>Operating expenses ₹{exp:,.2f}</p></div>',unsafe_allow_html=True)
+def genres_page():
+    hero("🏷️ Genres", "Manage the genre directory")
+    st.write(" · ".join(get_genres()))
+    new_genre = st.text_input("Add Genre")
+    if st.button("Add Genre", type="primary"):
+        if add_genre(new_genre):
+            append_activity(st.session_state.employee, "Genre added", new_genre)
+            st.success("Genre added.")
+            st.rerun()
+        st.warning("Genre already exists or is empty.")
+    if st.button("Back to Dashboard"): set_screen("clerk")
+    footer()
+
+
+def activity_page(back="clerk"):
+    hero("📝 Activity Log", "Recent operational events")
+    for line in read_activity(150):
+        parts = [p.strip() for p in line.split("|", 3)]
+        if len(parts) == 4:
+            st.markdown(f"<div class='card' style='margin-bottom:8px;padding:12px'><b>{parts[0]}</b> · {parts[1]}<br><b>{parts[2]}</b> · {parts[3]}</div>", unsafe_allow_html=True)
+        else:
+            st.write(line)
+    if st.button("Back"): set_screen(back)
+    footer()
+
+
+def director_dashboard():
+    hero("📊 Director Workspace", f"Signed in as {st.session_state.employee.get('Full Name', st.session_state.employee.get('Username', ''))}")
+    books = load_books()
+    records = []
+    if STORE_DATA_PATH.exists():
+        wb = load_workbook(STORE_DATA_PATH, read_only=True, data_only=True)
+        ws = wb.active
+        headers = [clean_text(x.value) for x in ws[1]]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if any(v is not None for v in row): records.append(dict(zip(headers, row)))
+    revenue = sum(to_float(r.get("Line Total")) for r in records)
+    profit = sum(to_float(r.get("Line Profit")) for r in records)
+    expenses = sum(to_float(r.get("Amount")) for r in load_expenses())
+    c1,c2,c3,c4 = st.columns(4)
+    with c1: metric("Revenue", money(revenue))
+    with c2: metric("Book Profit", money(profit))
+    with c3: metric("Expenses", money(expenses))
+    with c4: metric("Net", money(profit-expenses))
+    c1,c2,c3,c4 = st.columns(4)
+    if c1.button("Employees", use_container_width=True): set_screen("employees")
+    if c2.button("Expenses", use_container_width=True): set_screen("expenses")
+    if c3.button("Catalog", use_container_width=True): set_screen("catalog_director")
+    if c4.button("Activity Log", use_container_width=True): set_screen("activity_director")
+    if st.button("Log Out", use_container_width=True): logout()
+    footer()
+
 
 def employees_page():
-    page_bg("director"); sidebar_staff("Director"); emps=load_employees(); st.markdown('<div class="hero"><div class="pill">WORKFORCE MANAGEMENT</div><h1>Employee <span class="gradient-text">Administration</span></h1><p>Employee IDs are generated automatically from the highest existing EMP number.</p></div>',unsafe_allow_html=True)
-    st.markdown(f'<div class="metric"><div class="l">Next Employee ID</div><div class="v">{generate_employee_id()}</div></div>',unsafe_allow_html=True)
-    with st.form("employee_form"):
-        a,b=st.columns(2); name=a.text_input("Full Name *"); phone=b.text_input("Phone"); a,b=st.columns(2); email=a.text_input("Email"); username=b.text_input("Username *"); a,b,c=st.columns(3); password=a.text_input("Password *",type="password"); designation=b.selectbox("Designation",["Store Clerk","Director"]); access=c.selectbox("Access",["s","csp"])
-        if st.form_submit_button("Create Employee →",type="primary",use_container_width=True):
-            if not name or not username or not password: st.error("Name, username and password are required.")
-            else:
-                try:
-                    rec=create_employee(name,phone,email,username,password,designation,access); log_activity(st.session_state.employee.get("Full Name","Director"),"Employee created",rec['Employee ID']); st.success(f"Employee {rec['Employee ID']} created successfully."); st.rerun()
-                except ValueError as e: st.error(str(e))
-    st.markdown('<div class="section-title">Current employees</div>',unsafe_allow_html=True)
-    for e in emps: st.markdown(f'<div class="card" style="margin-bottom:10px"><b>{escape(e.get("Employee ID",""))}</b> · {escape(e.get("Full Name",""))} · {escape(e.get("Designation",""))} · @{escape(e.get("Username",""))} · <span class="status-ok">{escape(e.get("Status","Active"))}</span></div>',unsafe_allow_html=True)
+    hero("👥 Employees", "Create and review store employee accounts")
+    employees = load_employees()
+    for e in employees:
+        st.write(f"**{e.get('Employee ID','')}** · {e.get('Full Name','')} · {e.get('Designation','')} · {e.get('Username','')} · {e.get('Status','')}")
+    st.divider()
+    st.markdown("### Create Employee")
+    with st.form("employee_create"):
+        name = st.text_input("Full Name")
+        phone = st.text_input("Phone")
+        email = st.text_input("Email")
+        username = st.text_input("Username")
+        password = st.text_input("Password")
+        designation = st.selectbox("Designation", ["Store Clerk", "Director"])
+        submit = st.form_submit_button("Create Employee", type="primary")
+    if submit:
+        if not name or not username or not password:
+            st.error("Full Name, Username and Password are required.")
+        elif any(e.get("Username", "").lower() == username.lower() for e in employees):
+            st.error("Username already exists.")
+        else:
+            emp_id = create_employee(name, phone, email, username, password, designation)
+            append_activity(st.session_state.employee, "Employee created", f"{emp_id} · {designation}")
+            st.success(f"Employee created: {emp_id}")
+            st.rerun()
+    if st.button("Back to Director"): set_screen("director")
+    footer()
 
-def catalog():
-    page_bg("director"); sidebar_staff("Director"); books=load_books(); st.markdown('<div class="hero"><div class="pill">CATALOG INTELLIGENCE</div><h1>Book <span class="gradient-text">Catalog</span></h1></div>',unsafe_allow_html=True)
-    q=st.text_input("Search catalog"); rows=[b for b in books if not q or q.lower() in f"{b['name']} {b['author']} {b['id']} {b['genre']}".lower()]
-    for b in rows: st.markdown(f'<div class="card" style="margin-bottom:10px"><b>{escape(b["name"])}</b> · {escape(b["id"])} · {escape(b["genre"])}<br>{escape(b["author"])} · ₹{b["price"]:.2f} · Stock {b["stock"]}</div>',unsafe_allow_html=True)
 
-def records():
-    page_bg("records"); sidebar_staff("Director"); sales=load_sales(); st.markdown('<div class="hero"><div class="pill">FINANCIAL RECORDS</div><h1>Sales <span class="gradient-text">Records</span></h1><p>Customer name and address values shown here are stored after normalization.</p></div>',unsafe_allow_html=True)
-    if not sales: st.info("No sales recorded yet."); return
-    for r in sales[::-1]: st.markdown(f'''<div class="card" style="margin-bottom:12px"><h3>{escape(str(r.get('Order ID','')))} · {escape(str(r.get('Customer Name','')))}</h3><p>{escape(str(r.get('Flat / House / Building','')))}, {escape(str(r.get('Street / Area','')))}, {escape(str(r.get('Landmark','')))}<br>{escape(str(r.get('City','')))}, {escape(str(r.get('State','')))} - {escape(str(r.get('PIN','')))}</p><p><b>{escape(str(r.get('Book Name','')))}</b> · Qty {r.get('Quantity',0)} · ₹{money(r.get('Line Total')):,.2f} · {escape(str(r.get('Payment Method','')))}</p></div>''',unsafe_allow_html=True)
-
-def expenses():
-    page_bg("director"); sidebar_staff("Director"); st.markdown('<div class="hero"><div class="pill">OPERATING COSTS</div><h1>Expense <span class="gradient-text">Management</span></h1></div>',unsafe_allow_html=True)
+def expenses_page():
+    hero("💳 Expenses", "Record store operating expenses")
     with st.form("expense_form"):
-        a,b=st.columns(2); cat=a.text_input("Category"); desc=b.text_input("Description"); amount=st.number_input("Amount",min_value=0.0,step=100.0)
-        if st.form_submit_button("Record Expense →",type="primary"):
-            add_expense(cat,desc,amount); log_activity(st.session_state.employee.get("Full Name","Director"),"Expense recorded",f"₹{amount:.2f}"); st.rerun()
-    for e in load_expenses()[::-1]: st.markdown(f'<div class="card" style="margin-bottom:10px"><b>{escape(e.get("Expense ID",""))}</b> · {escape(e.get("Category",""))} · ₹{money(e.get("Amount")):,.2f}<br>{escape(e.get("Description",""))}</div>',unsafe_allow_html=True)
+        category = st.text_input("Category")
+        description = st.text_input("Description")
+        amount = st.number_input("Amount", min_value=0.0, step=100.0)
+        submit = st.form_submit_button("Record Expense", type="primary")
+    if submit and amount > 0:
+        add_expense(category, description, amount, st.session_state.employee.get("Full Name", "Director"))
+        append_activity(st.session_state.employee, "Expense recorded", f"{category} · {money(amount)}")
+        st.success("Expense recorded.")
+    st.markdown("### Recent Expenses")
+    for e in reversed(load_expenses()[-30:]):
+        st.write(f"{e.get('Date')} · **{e.get('Category')}** · {e.get('Description')} · {money(e.get('Amount'))}")
+    if st.button("Back to Director"): set_screen("director")
+    footer()
 
-def app():
-    p=st.session_state.page
-    if p=="landing": landing()
-    elif p=="login": login()
-    elif p=="customer": customer()
-    elif p=="cart": cart_page()
-    elif p=="checkout": checkout()
-    elif p=="confirmation": confirmation()
-    elif p=="clerk": clerk_dashboard()
-    elif p=="receiving": receiving()
-    elif p=="addbook": addbook()
-    elif p=="genres": genres()
-    elif p=="pricing": pricing()
-    elif p=="activity": activity()
-    elif p=="director": director()
-    elif p=="employees": employees_page()
-    elif p=="catalog": catalog()
-    elif p=="records": records()
-    elif p=="expenses": expenses()
-    else: go("landing")
 
-app()
+def director_catalog():
+    hero("📚 Catalog", "Book prices, costs and stock")
+    for b in load_books():
+        st.write(f"**{b['title']}** · Cost {money(b['cost'])} · Price {money(b['price'])} · Profit {money(b['profit'])} · Stock {b['stock']}")
+    if st.button("Back to Director"): set_screen("director")
+    footer()
+
+
+def route():
+    screen = st.session_state.screen
+    if screen == "home": home()
+    elif screen == "customer": customer_store()
+    elif screen == "cart": cart_page()
+    elif screen == "checkout": checkout_page()
+    elif screen == "confirmation": confirmation_page()
+    elif screen == "clerk_login": login_page("sd")
+    elif screen == "director_login": login_page("csp")
+    elif screen == "clerk": clerk_dashboard()
+    elif screen == "receiving": receiving_page()
+    elif screen == "catalog": catalog_page()
+    elif screen == "genres": genres_page()
+    elif screen == "activity": activity_page("clerk")
+    elif screen == "director": director_dashboard()
+    elif screen == "employees": employees_page()
+    elif screen == "expenses": expenses_page()
+    elif screen == "catalog_director": director_catalog()
+    elif screen == "activity_director": activity_page("director")
+    else:
+        st.session_state.screen = "home"
+        st.rerun()
+
+
+init_state()
+route()
