@@ -42,7 +42,7 @@ def go(page):
     st.rerun()
 
 def init():
-    defaults = {"page":"landing","role":None,"employee":None,"cart":{},"order":None,"invoice":None,"customer":None,"restock_book_code":None}
+    defaults = {"page":"landing","role":None,"employee":None,"cart":{},"order":None,"invoice":None,"invoice_pdf":None,"customer":None,"restock_book_code":None}
     for k,v in defaults.items():
         if k not in st.session_state: st.session_state[k]=v
 init()
@@ -142,38 +142,35 @@ def checkout():
     page_bg("customer"); sidebar_customer()
     if not st.session_state.cart: go("cart")
     books={b['id']:b for b in load_books()}; total=sum(books[k]['price']*v for k,v in st.session_state.cart.items() if k in books)
-    st.markdown('<div class="hero"><div class="pill">CHECKOUT · COD</div><h1>Complete your <span class="gradient-text">delivery.</span></h1><p>Enter customer and delivery details. Your information is cleaned and formatted before being stored in the sales record.</p></div>',unsafe_allow_html=True)
-    with st.form("checkout_form"):
-        st.markdown("### Customer details")
-        a,b=st.columns(2); name=a.text_input("Full Name *"); phone=b.text_input("Phone *",max_chars=10)
-        st.markdown("### Delivery address")
-        a,b=st.columns(2); flat=a.text_input("Flat / House / Building *"); street=b.text_input("Street / Area *")
-        landmark=st.text_input("Landmark")
-        address_key=st.session_state.get("address_refresh",0)
-        states=get_indian_states()
-        state_options=states or ["Address list unavailable"]
-        state=st.selectbox("State *",state_options,key=f"address_state_{address_key}",disabled=not bool(states))
-        districts=get_indian_districts(state) if states else []
-        district_options=districts or ["Address list unavailable"]
-        district=st.selectbox("District *",district_options,key=f"address_district_{state}_{address_key}",disabled=not bool(districts))
-        cities=get_indian_cities(state,district) if districts else []
-        city_options=cities or ["Address list unavailable"]
-        city=st.selectbox("City *",city_options,key=f"address_city_{state}_{district}_{address_key}",disabled=not bool(cities))
-        pins=get_city_pincodes(state,district,city) if cities else []
-        pin_options=pins or ["Address list unavailable"]
-        pin=st.selectbox("PIN *",pin_options,key=f"address_pin_{state}_{district}_{city}_{address_key}",disabled=not bool(pins))
-        st.markdown('<div class="metric"><div class="l">Payment Method</div><div class="v" style="font-size:22px">Cash on Delivery</div></div>',unsafe_allow_html=True)
-        if st.form_submit_button(f"Place Order · ₹{total:,.2f}",type="primary",use_container_width=True):
-            if not name or not phone.isdigit() or len(phone)!=10 or not flat or not street or not district or not city or not state or not pin.isdigit() or len(pin)!=6: st.error("Please complete all required fields with valid phone and PIN values.")
-            else:
-                items=[]
-                for bid,qty in st.session_state.cart.items():
-                    b=books.get(bid)
-                    if not b or b['stock']<qty: st.error(f"Insufficient stock for {b['name'] if b else bid}."); return
-                    items.append({"book_id":bid,"name":b['name'],"author":b['author'],"genre":b['genre'],"quantity":qty,"unit_price":b['price'],"cost_price":b['cost'],"line_total":round(b['price']*qty,2),"line_profit":round((b['price']-b['cost'])*qty,2)})
-                order={"order_id":new_order_id(),"date":datetime.now().strftime("%d-%m-%Y %H:%M:%S"),"customer_name":clean_name(name),"phone":phone,"flat":clean_address(flat),"street":clean_address(street),"landmark":clean_address(landmark),"city":clean_name(city),"state":clean_name(state),"pin":pin,"payment":"Cash on Delivery","grand_total":round(sum(i['line_total'] for i in items),2),"grand_profit":round(sum(i['line_profit'] for i in items),2)}
-                if reduce_stock(items):
-                    append_order(order,items); log_activity(order['customer_name'],"Order placed",order['order_id']); st.session_state.order=order; st.session_state.invoice=invoice_html(order,items); st.session_state.cart={}; go("confirmation")
+    st.markdown('<div class="hero"><div class="pill">CHECKOUT · COD</div><h1>Complete your <span class="gradient-text">delivery.</span></h1><p>Enter customer and delivery details.</p></div>',unsafe_allow_html=True)
+    st.markdown("### Customer details")
+    a,b=st.columns(2); name=a.text_input("Full Name *",key="checkout_name"); phone=b.text_input("Phone *",max_chars=10,key="checkout_phone")
+    st.markdown("### Delivery address")
+    a,b=st.columns(2); flat=a.text_input("Flat / House / Building *",key="checkout_flat"); street=b.text_input("Street / Area *",key="checkout_street")
+    landmark=st.text_input("Landmark",key="checkout_landmark")
+    states=get_indian_states()
+    if not states: st.error("Address directory is unavailable. Check GEMINI_API_KEY and try again."); return
+    state=st.selectbox("State *",states,key="address_state_live")
+    districts=get_indian_districts(state)
+    if not districts: st.error(f"No district data was returned for {state}. Please retry."); return
+    district=st.selectbox("District *",districts,key=f"address_district_live_{state}")
+    cities=get_indian_cities(state,district)
+    if not cities: st.error(f"No city data was returned for {district}, {state}. Please retry."); return
+    city=st.selectbox("City *",cities,key=f"address_city_live_{state}_{district}")
+    pins=get_city_pincodes(state,district,city)
+    if not pins: st.error(f"No PIN codes were returned for {city}, {district}, {state}. Please retry."); return
+    pin=st.selectbox("PIN *",pins,key=f"address_pin_live_{state}_{district}_{city}")
+    st.markdown('<div class="metric"><div class="l">Payment Method</div><div class="v" style="font-size:22px">Cash on Delivery</div></div>',unsafe_allow_html=True)
+    if st.button(f"Place Order · ₹{total:,.2f}",type="primary",use_container_width=True):
+        if not name or not phone.isdigit() or len(phone)!=10 or not flat or not street or not pin.isdigit() or len(pin)!=6: st.error("Please complete all required fields with valid phone and PIN values."); return
+        items=[]
+        for bid,qty in st.session_state.cart.items():
+            b=books.get(bid)
+            if not b or b['stock']<qty: st.error(f"Insufficient stock for {b['name'] if b else bid}."); return
+            items.append({"book_id":bid,"name":b['name'],"author":b['author'],"genre":b['genre'],"quantity":qty,"unit_price":b['price'],"cost_price":b['cost'],"line_total":round(b['price']*qty,2),"line_profit":round((b['price']-b['cost'])*qty,2)})
+        order={"order_id":new_order_id(),"date":datetime.now().strftime("%d-%m-%Y %H:%M:%S"),"customer_name":clean_name(name),"phone":phone,"flat":clean_address(flat),"street":clean_address(street),"landmark":clean_address(landmark),"city":clean_name(city),"state":clean_name(state),"pin":pin,"payment":"Cash on Delivery","grand_total":round(sum(i['line_total'] for i in items),2),"grand_profit":round(sum(i['line_profit'] for i in items),2)}
+        if reduce_stock(items):
+            append_order(order,items); log_activity(order['customer_name'],"Order placed",order['order_id']); st.session_state.order=order; st.session_state.invoice=invoice_html(order,items); st.session_state.invoice_pdf=invoice_pdf(order,items); st.session_state.cart={}; go("confirmation")
 
 def confirmation():
     page_bg("customer"); sidebar_customer(); order=st.session_state.get("order")
@@ -181,7 +178,7 @@ def confirmation():
     st.markdown(f'<div class="hero"><div class="pill">ORDER CONFIRMED</div><h1>Thank you, <span class="gradient-text">{escape(order["customer_name"])}.</span></h1><p>Your order <b>{order["order_id"]}</b> has been recorded successfully.</p></div>',unsafe_allow_html=True)
     st.markdown(f'<div class="metric"><div class="l">Order Total · Cash on Delivery</div><div class="v">₹{order["grand_total"]:,.2f}</div></div>',unsafe_allow_html=True)
     if st.session_state.get("invoice"):
-        st.download_button("⬇ Download Bill",st.session_state.invoice,file_name=f"{order['order_id']}.html",mime="text/html",use_container_width=True)
+        st.download_button("⬇ Download Bill (PDF)",st.session_state.get("invoice_pdf",b""),file_name=f"{order['order_id']}.pdf",mime="application/pdf",use_container_width=True)
         st.components.v1.html(st.session_state.invoice,height=760,scrolling=True)
     if st.button("Continue Shopping →",type="primary",use_container_width=True): go("customer")
 

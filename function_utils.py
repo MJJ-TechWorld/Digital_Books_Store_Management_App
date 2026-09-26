@@ -9,6 +9,12 @@ import urllib.request
 from pathlib import Path
 from datetime import datetime
 from openpyxl import Workbook, load_workbook
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 BASE_DIR = Path(__file__).resolve().parent
 BOOK_DATA_PATH = BASE_DIR / "BOOKS_DATA.xlsx"
@@ -20,6 +26,7 @@ EXPENSES_DATA_PATH = BASE_DIR / "EXPENSES.csv"
 CREDT_DATA_PATH = BASE_DIR / "CREDENTIAL.txt"
 ADDRESS_CACHE_PATH = BASE_DIR / "ADDRESS_CACHE.json"
 GEMINI_MODEL = "gemini-3.5-flash-lite"
+DEFAULT_EMPLOYEE = {"Employee ID": "EMP101", "Full Name": "Default Store Clerk", "Phone": "", "Email": "", "Username": "user@", "Password": "12345678", "Designation": "Store Clerk", "Access": "sd", "Status": "Active", "Joined On": datetime.now().strftime("%d-%m-%Y")}
 
 BOOK_HEADERS = ["Book ID", "Book Name", "Author Name", "Genre", "Language", "Published Date", "Wholesale Price", "Market Price", "Profit Margin", "Quantities Available"]
 EMP_HEADERS = ["Employee ID", "Full Name", "Phone", "Email", "Username", "Password", "Designation", "Access", "Status", "Joined On"]
@@ -67,6 +74,19 @@ def integer(value):
     except Exception:
         return 0
 
+def _seed_default_employee():
+    try:
+        if not EMPLS_DATA_PATH.exists():
+            return
+        with open(EMPLS_DATA_PATH, newline="", encoding="utf-8") as f:
+            rows=list(csv.reader(f))
+        if len(rows)>1 and any(any(str(x).strip() for x in row) for row in rows[1:]):
+            return
+        with open(EMPLS_DATA_PATH,"w",newline="",encoding="utf-8") as f:
+            w=csv.writer(f); w.writerow(EMP_HEADERS); w.writerow([DEFAULT_EMPLOYEE[h] for h in EMP_HEADERS])
+    except Exception:
+        pass
+
 def ensure_runtime_files():
     BASE_DIR.mkdir(parents=True, exist_ok=True)
     if not BOOK_DATA_PATH.exists():
@@ -85,6 +105,7 @@ def ensure_runtime_files():
     if not EMPLS_DATA_PATH.exists():
         with open(EMPLS_DATA_PATH, "w", newline="", encoding="utf-8") as f:
             csv.writer(f).writerow(EMP_HEADERS)
+    _seed_default_employee()
     if not LOG_DATA_PATH.exists():
         LOG_DATA_PATH.write_text("BOOK STORE ACTIVITY LOG\n" + "=" * 90 + "\n", encoding="utf-8")
     if not GENRES_DATA_PATH.exists():
@@ -304,6 +325,7 @@ def reduce_stock(items):
 
 def load_employees():
     ensure_runtime_files()
+    _seed_default_employee()
     with open(EMPLS_DATA_PATH, newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f))
     if not rows:
@@ -433,3 +455,22 @@ def invoice_html(order, items):
     rows = "".join(f"<tr><td>{html.escape(str(i['name']))}</td><td>{html.escape(str(i['book_id']))}</td><td>{i['quantity']}</td><td>₹{i['unit_price']:.2f}</td><td>₹{i['line_total']:.2f}</td></tr>" for i in items)
     address = ", ".join(x for x in [order['flat'], order['street'], order['landmark'], order['city'], order['state'] + " - " + order['pin']] if x)
     return f'''<!doctype html><html><head><meta charset="utf-8"><title>{order['order_id']}</title><style>body{{font-family:Arial,sans-serif;background:#f5f7fb;color:#172033;padding:32px}}.invoice{{max-width:900px;margin:auto;background:white;border-radius:22px;padding:36px;box-shadow:0 20px 60px #14213d18}}h1{{margin:0;color:#633cff}}.top{{display:flex;justify-content:space-between;gap:20px;border-bottom:1px solid #e5e7eb;padding-bottom:22px}}table{{width:100%;border-collapse:collapse;margin-top:25px}}th,td{{padding:13px;border-bottom:1px solid #e5e7eb;text-align:left}}th{{background:#f0edff}}.total{{font-size:24px;font-weight:800;text-align:right;margin-top:22px;color:#0f8b6d}}.muted{{color:#667085}}</style></head><body><div class="invoice"><div class="top"><div><h1>BOOKNEST</h1><p class="muted">Premium Book Store · Tax Invoice</p></div><div><b>Order ID</b><br>{order['order_id']}<br><span class="muted">{order['date']}</span></div></div><h3>Customer</h3><p><b>{html.escape(order['customer_name'])}</b><br>{html.escape(order['phone'])}<br>{html.escape(address)}</p><table><tr><th>Book</th><th>Code</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>{rows}</table><div class="total">Grand Total: ₹{order['grand_total']:.2f}</div><p class="muted">Payment: {order['payment']} · Status: Confirmed</p></div></body></html>'''
+
+
+def invoice_pdf(order, items):
+    buffer=BytesIO()
+    doc=SimpleDocTemplate(buffer,pagesize=A4,rightMargin=36,leftMargin=36,topMargin=36,bottomMargin=36)
+    styles=getSampleStyleSheet()
+    title=ParagraphStyle("InvoiceTitle",parent=styles["Title"],fontSize=24,leading=28,textColor=colors.HexColor("#4f35c9"),spaceAfter=8)
+    right=ParagraphStyle("Right",parent=styles["Normal"],alignment=TA_RIGHT,fontSize=10)
+    small=ParagraphStyle("Small",parent=styles["Normal"],fontSize=9,textColor=colors.HexColor("#667085"))
+    story=[Paragraph("BOOKNEST",title),Paragraph("Tax Invoice",styles["Heading2"]),Spacer(1,10)]
+    story.append(Table([[Paragraph(f"<b>Order ID</b><br/>{html.escape(str(order['order_id']))}",styles["Normal"]),Paragraph(f"<b>Date</b><br/>{html.escape(str(order['date']))}",right)]],colWidths=[280,230],style=[("VALIGN",(0,0),(-1,-1),"TOP")]))
+    address=", ".join(x for x in [order.get("flat",""),order.get("street",""),order.get("landmark",""),order.get("city",""),f"{order.get('state','')} - {order.get('pin','')}" if order.get("state") else ""] if x)
+    story += [Spacer(1,16),Paragraph("Customer",styles["Heading3"]),Paragraph(f"<b>{html.escape(str(order['customer_name']))}</b><br/>{html.escape(str(order['phone']))}<br/>{html.escape(address)}",styles["Normal"]),Spacer(1,18)]
+    data=[["Book","Code","Qty","Unit Price","Total"]]+[[html.escape(str(i["name"])),html.escape(str(i["book_id"])),str(i["quantity"]),f"₹{i['unit_price']:.2f}",f"₹{i['line_total']:.2f}"] for i in items]
+    table=Table(data,colWidths=[210,75,45,80,80],repeatRows=1)
+    table.setStyle(TableStyle([("BACKGROUND",(0,0),(-1,0),colors.HexColor("#eeeaff")),("TEXTCOLOR",(0,0),(-1,0),colors.HexColor("#392b91")),("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"),("GRID",(0,0),(-1,-1),0.35,colors.HexColor("#e1e4ea")),("VALIGN",(0,0),(-1,-1),"MIDDLE"),("LEFTPADDING",(0,0),(-1,-1),7),("RIGHTPADDING",(0,0),(-1,-1),7),("TOPPADDING",(0,0),(-1,-1),7),("BOTTOMPADDING",(0,0),(-1,-1),7)]))
+    story += [table,Spacer(1,18),Paragraph(f"<b>Grand Total: ₹{order['grand_total']:.2f}</b>",right),Spacer(1,8),Paragraph(f"Payment: {html.escape(str(order['payment']))} · Status: Confirmed",small)]
+    doc.build(story)
+    return buffer.getvalue()
