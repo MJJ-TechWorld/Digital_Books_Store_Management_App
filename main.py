@@ -3,7 +3,7 @@ from datetime import datetime
 from html import escape
 from function_utils import *
 
-st.set_page_config(page_title="BookNest | Store Management", page_icon="📚", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="BooksKart | Store Management", page_icon="📚", layout="wide", initial_sidebar_state="expanded")
 ensure_runtime_files()
 
 BG = {
