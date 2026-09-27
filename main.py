@@ -101,7 +101,7 @@ def login():
             username=st.text_input("Username")
             password=st.text_input("Password",type="password")
             if st.form_submit_button("Sign In →",type="primary",use_container_width=True):
-                emp=authenticate_employee(username,password)
+                emp=authenticate_employee(username,password,role)
                 if emp and emp["role"]==role:
                     st.session_state.employee=emp; st.session_state.role=role; log_activity(emp.get("Full Name",username),"Logged in",role); go("clerk" if role=="Stock Clerk" else "director")
                 else: st.error("Invalid credentials or insufficient access.")

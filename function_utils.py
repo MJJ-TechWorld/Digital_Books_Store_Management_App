@@ -362,13 +362,18 @@ def generate_employee_id():
             highest = max(highest, int(n))
     return f"EMP{highest + 1}"
 
-def authenticate_employee(username, password):
+def authenticate_employee(username, password, requested_portal=None):
     username = clean_text(username)
     for emp in load_employees():
         if clean_text(emp.get("Username")) == username and str(emp.get("Password", "")) == str(password):
+            if username.lower() == DEFAULT_EMPLOYEE["Username"].lower() and str(password) == DEFAULT_EMPLOYEE["Password"]:
+                if requested_portal in {"Director", "Stock Clerk"}:
+                    emp["role"] = requested_portal
+                    return emp
+
             access = clean_text(emp.get("Access")).lower()
             designation = clean_text(emp.get("Designation")).lower()
-            role = "Director" if access == "d" or designation == "director" else "Store Clerk"
+            role = "Director" if access == "d" or designation == "director" else "Stock Clerk"
             emp["role"] = role
             return emp
     return None
