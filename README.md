@@ -1,151 +1,109 @@
-📚✨ My BooksKart — Digital Books Store Management App
+# ***📚✨ My BooksKart — Digital Books Store Management App***
 
-> 🎯 A Streamlit-based Digital Books Store Management System for managing book catalogs, inventory, customer orders, billing, employees, authentication, business operations, and store records through an interactive web interface.
-
-
-
+> ***🎯 A Streamlit-based Digital Books Store Management System for managing book catalogs, inventory, customer orders, billing, employees, authentication, business operations, and store records through an interactive web interface.***
 
 ---
 
-🚀🌐 Live Application
+# ***🚀🌐 LIVE APPLICATION***
 
-🔥 Try My BooksKart Online
+## ***🔥 Try My BooksKart Online***
 
-👉 📚 OPEN MY BOOKSKART — LIVE APPLICATION
+### 👉 [📚 OPEN MY BOOKSKART — LIVE APPLICATION](https://my-bookskart.streamlit.app/)
 
-Experience the complete My BooksKart application directly from your browser.
-
-
----
-
-💻📂 GitHub Repository
-
-👉 ⭐ VIEW MY BOOKSKART SOURCE CODE ON GITHUB
-
-Explore the complete source code, project structure, implementation, and development files.
-
+***Experience the complete My BooksKart application directly from your browser.***
 
 ---
 
-🌟 Features
+# ***💻📂 GITHUB REPOSITORY***
 
-🛍️ Customer Store
+### 👉 [⭐ VIEW MY BOOKSKART SOURCE CODE ON GITHUB](https://github.com/MJJ-TechWorld/My_BooksKart_App)
 
-My BooksKart provides a browser-based bookstore storefront where customers can purchase books without creating an account.
-
-📚 Book Catalog & Browsing
-
-🔎 Book Search
-
-🏷️ Genre-Based Browsing
-
-📖 Book Information
-
-🛒 Shopping Cart
-
-➕ Add Books to Cart
-
-➖ Modify Cart Quantities
-
-🧹 Remove Items from Cart
-
-💰 Automatic Cart Total Calculation
-
-📦 Customer Checkout
-
-💳 Cash-on-Delivery Payment
-
-🧾 Automatic Invoice Generation
-
-📄 Downloadable PDF Invoice
-
-🆔 Automatic Order ID Generation
-
-📊 Automatic Inventory Deduction
-
-📝 Complete Order Records
-
-
+***Explore the complete source code, project structure, implementation, and development files.***
 
 ---
 
-📦 Inventory Management
+# ***🌟 FEATURES***
 
-The inventory system allows authorized employees to monitor and maintain book stock.
+## ***🛍️ Customer Store***
 
-📊 Stock Classification
+My BooksKart provides a complete browser-based bookstore storefront where customers can browse and purchase books without creating an account.
 
-Stock Quantity	Status
-
-0	🔴 Out of Stock
-1–2	🟠 Low Stock
->2	🟢 Healthy Stock
-
-
-🔧 Inventory Operations
-
-📊 View Inventory
-
-🔎 Search Inventory
-
-📥 Restock Books
-
-➕ Add Book Copies
-
-🆕 Add New Books
-
-🏷️ Create New Genres
-
-💰 Update Book Pricing
-
-📦 Monitor Stock Levels
-
-🚨 Identify Out-of-Stock Books
-
-📝 Record Inventory Operations
-
-
-📥 Quick Restocking
-
-When a book reaches 0 stock, the Stock Clerk can use the 📥 Restock action from the out-of-stock section.
-
-The system automatically takes the selected book to Inventory Receiving, where the exact book is already selected for receiving.
-
+- 📚 ***Book Catalog & Browsing***
+- 🔎 ***Book Search***
+- 🏷️ ***Genre-Based Browsing***
+- 📖 ***Book Information***
+- 🛒 ***Shopping Cart***
+- ➕ ***Add Books to Cart***
+- ➖ ***Modify Cart Quantities***
+- 🧹 ***Remove Items from Cart***
+- 💰 ***Automatic Cart Total Calculation***
+- 📦 ***Customer Checkout***
+- 💳 ***Cash-on-Delivery Payment***
+- 🧾 ***Automatic Invoice Generation***
+- 📄 ***Downloadable PDF Invoice***
+- 🆔 ***Automatic Order ID Generation***
+- 📊 ***Automatic Inventory Deduction***
+- 📝 ***Complete Order Records***
 
 ---
 
-👤 Customer Checkout
+## ***📦 Inventory Management***
+
+The inventory system allows authorized employees to ***monitor, maintain, receive, and update book stock***.
+
+### ***📊 Stock Classification***
+
+| ***Stock Quantity*** | ***Status*** |
+|---:|---|
+| `0` | 🔴 ***Out of Stock*** |
+| `1–2` | 🟠 ***Low Stock*** |
+| `>2` | 🟢 ***Healthy Stock*** |
+
+### ***🔧 Inventory Operations***
+
+- 📊 ***View Inventory***
+- 🔎 ***Search Inventory***
+- 📥 ***Restock Books***
+- ➕ ***Add Book Copies***
+- 🆕 ***Add New Books***
+- 🏷️ ***Create New Genres***
+- 💰 ***Update Book Pricing***
+- 📦 ***Monitor Stock Levels***
+- 🚨 ***Identify Out-of-Stock Books***
+- 📝 ***Record Inventory Operations***
+
+### ***📥 Quick Restocking***
+
+When a book reaches `0` stock, the Stock Clerk can use the ***📥 Restock*** action.
+
+The system automatically opens ***Inventory Receiving*** with the ***exact selected book already selected***.
+
+---
+
+# ***👤 CUSTOMER CHECKOUT***
 
 Customers can enter structured delivery information during checkout.
 
-📋 Customer Details
+### ***📋 Customer Details***
 
-👤 Full Name
+- 👤 ***Full Name***
+- 📱 ***Phone Number***
+- 🏠 ***Flat / House / Building***
+- 🛣️ ***Street / Area***
+- 📍 ***Landmark***
+- 🏙️ ***City***
+- 🗺️ ***State***
+- 📮 ***PIN Code***
 
-📱 Phone Number
-
-🏠 Flat / House / Building
-
-🛣️ Street / Area
-
-📍 Landmark
-
-🏙️ City
-
-🗺️ State
-
-📮 PIN Code
-
-
-The information is associated with the order and stored with the corresponding store records.
-
+The information is associated with the order and stored with the corresponding ***store records***.
 
 ---
 
-🇮🇳 Cascading Indian Address System
+# ***🇮🇳 CASCADING INDIAN ADDRESS SYSTEM***
 
-My BooksKart provides a guided Indian address-selection workflow:
+My BooksKart provides a guided address-selection workflow:
 
+```text
 🗺️ State
    ↓
 📍 District
@@ -154,28 +112,28 @@ My BooksKart provides a guided Indian address-selection workflow:
    ↓
 📮 PIN Code
 
-The selections are dynamically dependent on the previous selection.
+The available options are dynamically filtered according to the previous selection.
 
-For example:
+Example
 
 Select State
      ↓
-Only districts from that state
+Districts from selected State
      ↓
-Only cities from that district
+Cities from selected District
      ↓
-PIN codes belonging to that city
+PIN Codes from selected City
 
-This helps reduce incorrect combinations during customer checkout.
+This provides a structured and guided Indian address-entry experience during checkout.
 
-The application can use the Google Gemini API for address-related processing while maintaining a local cache to reduce repeated requests.
+The application can use the Google Gemini API for address-related processing and maintain a local address cache to reduce repeated requests.
 
 
 ---
 
-🧾 Billing & Invoice System
+🧾 BILLING & INVOICE SYSTEM
 
-After an order is successfully placed, My BooksKart generates a structured retail-style invoice.
+After successful order placement, My BooksKart generates a structured retail-style invoice.
 
 📄 Invoice Includes
 
@@ -217,7 +175,7 @@ Invoices can be displayed in the application and generated as downloadable PDF d
 
 ---
 
-🛒 Complete Order Processing
+🛒 COMPLETE ORDER PROCESSING
 
 My BooksKart supports multiple books in a single transaction.
 
@@ -250,7 +208,7 @@ My BooksKart supports multiple books in a single transaction.
 
 ---
 
-👨‍💼 Employee Management
+👨‍💼 EMPLOYEE MANAGEMENT
 
 Employee management is available through the authorized Director portal.
 
@@ -272,9 +230,9 @@ The system checks existing employee IDs and generates the next appropriate numer
 
 ---
 
-🏢 Designation-Based Access
+🏢 DESIGNATION-BASED ACCESS
 
-The current application uses two designations only:
+The application currently supports two designations only:
 
 Designation	Backend Access
 
@@ -284,14 +242,14 @@ Designation	Backend Access
 
 The backend access values are used internally and are not displayed to employees in the application interface.
 
-Employees select their designation, while the corresponding access is determined automatically by the system.
+Employees select their designation while the corresponding access is determined automatically by the system.
 
 
 ---
 
-🔐 Authentication System
+🔐 AUTHENTICATION SYSTEM
 
-The application provides separate authenticated employee portals.
+The application provides authenticated employee portals with designation-based access control.
 
 📦 Stock Clerk Portal
 
@@ -351,7 +309,7 @@ Director operations include:
 
 ---
 
-🔑 Default Account
+🔑 DEFAULT ACCOUNT
 
 My BooksKart initializes a default Director account when required.
 
@@ -364,12 +322,12 @@ Field	Value
 🔐 Access	Director
 
 
-The default account is intended for initial access to the employee management system.
+The default account is intended for initial employee-portal access.
 
 
 ---
 
-📊 Business Management
+📊 BUSINESS MANAGEMENT
 
 The Director portal provides centralized information about bookstore operations.
 
@@ -399,7 +357,7 @@ The Director portal provides centralized information about bookstore operations.
 
 ---
 
-📝 Activity Logging
+📝 ACTIVITY LOGGING
 
 Important application operations are recorded through the activity logging system.
 
@@ -433,9 +391,9 @@ Activity_Log.txt
 
 ---
 
-💾 File-Based Data Storage
+💾 FILE-BASED DATA STORAGE
 
-My BooksKart uses structured files instead of a traditional database.
+My BooksKart uses structured file-based storage rather than a traditional SQL database.
 
 File	Purpose
 
@@ -469,7 +427,7 @@ There is no SQLite or other SQL database dependency for the core application sto
 
 ---
 
-📊 Store Records
+📊 STORE RECORDS
 
 Completed orders are stored with structured customer, order, and book information.
 
@@ -504,38 +462,38 @@ Records are maintained in:
 
 STORE_RECORDS.xlsx
 
-Each purchased book can be recorded with the associated order and customer information, allowing sales data to be maintained in a structured format.
+Each purchased book can be recorded with its associated order and customer information.
 
 
 ---
 
-📚 Book Catalog Management
+📚 BOOK CATALOG MANAGEMENT
 
 Authorized employees can maintain the bookstore catalog through the application.
 
 Catalog Operations
 
-🔎 Search existing books
+🔎 Search Existing Books
 
-📖 View book information
+📖 View Book Information
 
-➕ Add additional copies
+➕ Add Additional Copies
 
-🆕 Add new books
+🆕 Add New Books
 
-🏷️ Create new genres
+🏷️ Create New Genres
 
-💰 Maintain pricing
+💰 Maintain Pricing
 
-📦 Monitor inventory
+📦 Monitor Inventory
 
-🚨 Identify unavailable books
+🚨 Identify Unavailable Books
 
 
 
 ---
 
-🛍️ Storefront Workflow
+🛍️ STOREFRONT WORKFLOW
 
 📚 Browse Catalog
        ↓
@@ -558,7 +516,7 @@ Catalog Operations
 
 ---
 
-👨‍💼 Employee Records
+👨‍💼 EMPLOYEE RECORDS
 
 Employee records can contain:
 
@@ -586,7 +544,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-🛡️ Access Control Structure
+🛡️ ACCESS CONTROL STRUCTURE
 
 🏢 Director
     │
@@ -611,7 +569,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-📥 Inventory Receiving Workflow
+📥 INVENTORY RECEIVING WORKFLOW
 
 🚨 Out-of-Stock Book
         ↓
@@ -630,7 +588,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-🏗️ Application Architecture
+🏗️ APPLICATION ARCHITECTURE
 
 📚 MY BOOKSKART
                               │
@@ -657,7 +615,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-🔄 Customer Workflow
+🔄 CUSTOMER WORKFLOW
 
 🚀 Open My BooksKart
         │
@@ -700,7 +658,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-🔄 Employee Workflow
+🔄 EMPLOYEE WORKFLOW
 
 🚀 Open My BooksKart
         │
@@ -728,9 +686,7 @@ Employee IDs are generated automatically by the system.
 
 ---
 
-🧩 Main Application Sections
-
-The application is organized around the following functional areas:
+🧩 MAIN APPLICATION SECTIONS
 
 🛍️ Customer
 
@@ -742,7 +698,7 @@ Inventory, receiving, restocking, catalog operations, genres, pricing and activi
 
 🏢 Director
 
-Business dashboard, employees, access management, inventory, catalog, pricing, expenses, records and activity logs.
+Business dashboard, employee management, access management, inventory, catalog, pricing, expenses, records and activity logs.
 
 🧾 Orders
 
@@ -755,7 +711,7 @@ Revenue, expenses, profit information, inventory information and operational rec
 
 ---
 
-🛠️ Technologies Used
+🛠️ TECHNOLOGIES USED
 
 🐍 Core Technology
 
@@ -791,7 +747,7 @@ Google Gemini API
 
 ---
 
-📁 Project Structure
+📁 PROJECT STRUCTURE
 
 My_BooksKart_App/
 │
@@ -812,7 +768,7 @@ My_BooksKart_App/
 
 ---
 
-⚙️ Requirements
+⚙️ REQUIREMENTS
 
 🐍 Python 3.x
 
@@ -821,14 +777,14 @@ My_BooksKart_App/
 🌐 Internet connection for API-assisted address functionality
 
 
-Install the required dependencies:
+Install Dependencies
 
 pip install -r requirements.txt
 
 
 ---
 
-🚀 Run Locally
+🚀 RUN LOCALLY
 
 1️⃣ Clone the Repository
 
@@ -855,16 +811,18 @@ http://localhost:8501
 
 ---
 
-🔐 Configuration
+🔐 CONFIGURATION
 
 If API-assisted address functionality is enabled, configure the required Gemini API key through the supported environment or Streamlit secrets configuration.
 
-⚠️ Do not commit private API credentials to the GitHub repository.
+> ⚠️ Never commit private API credentials to the GitHub repository.
+
+
 
 
 ---
 
-📊 System Highlights
+📊 SYSTEM HIGHLIGHTS
 
 🛒 Customer Store
 
@@ -898,10 +856,6 @@ Customer orders, employee information, inventory changes, expenses, and activity
 
 State → District → City → PIN selection provides a guided Indian address-entry process.
 
-🌐 Web-Based Application
-
-The application is built with Streamlit and can be accessed directly through a web browser.
-
 🧾 Retail-Style PDF Invoices
 
 The invoice system generates a structured PDF bill branded as MY BOOKSKART — Digital Books Store.
@@ -910,10 +864,14 @@ The invoice system generates a structured PDF bill branded as MY BOOKSKART — D
 
 Required Excel, CSV, TXT and JSON files can be created or initialized by the application when needed.
 
+🌐 Web-Based Application
+
+The application is built with Streamlit and can be accessed directly through a web browser.
+
 
 ---
 
-🎯 Project Purpose
+🎯 PROJECT PURPOSE
 
 My BooksKart demonstrates how Python and Streamlit can be used to build a practical digital bookstore management platform without relying on a traditional SQL database.
 
@@ -953,7 +911,7 @@ The project combines:
 
 ---
 
-🌐 Access My BooksKart
+🌐 ACCESS MY BOOKSKART
 
 🚀 LIVE APPLICATION
 
@@ -964,14 +922,14 @@ Browse Books • Manage Inventory • Process Orders • Generate Invoices
 
 ---
 
-💻 GitHub Repository
+💻 GITHUB REPOSITORY
 
 👉 📂 VIEW MY BOOKSKART SOURCE CODE ON GITHUB
 
 
 ---
 
-👨‍💻 Author
+👨‍💻 AUTHOR
 
 MJJ-TechWorld
 
@@ -982,7 +940,7 @@ Built with Python + Streamlit for digital bookstore operations and management.
 
 ---
 
-⭐ Support the Project
+⭐ SUPPORT THE PROJECT
 
 If you find My BooksKart useful:
 
@@ -994,7 +952,7 @@ If you find My BooksKart useful:
 
 ---
 
-📚 My BooksKart
+📚 MY BOOKSKART
 
 > Browse. Manage. Order. Track.
 
