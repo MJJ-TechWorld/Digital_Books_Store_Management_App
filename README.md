@@ -1,4 +1,3 @@
-````markdown
 # ***📚✨ My BooksKart — Digital Books Store Management App***
 
 > ***🎯 A Streamlit-based Digital Books Store Management System for managing book catalogs, inventory, customer orders, billing, employees, authentication, business operations, and store records through an interactive web interface.***
