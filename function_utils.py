@@ -646,7 +646,7 @@ def invoice_pdf(order, items):
             "<font color='#087f70'><b>Order Status: Confirmed</b></font>",
             normal
         ),
-        Paragraph(f"<font size='9' color='#667085'>GRAND TOTAL</font><br/><b>INR {order['grand_total']:,.2f}</b>", total_style)
+        Paragraph(f"<font size='9' color='#667085'>TOTAL</font><br/><b>INR {order['grand_total']:,.2f}</b>", total_style)
     ]], colWidths=[265, 265])
     summary.setStyle(TableStyle([
         ("BACKGROUND", (0,0), (-1,-1), colors.HexColor("#f7f8fb")),

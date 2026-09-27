@@ -55,7 +55,7 @@ def logout():
 
 def sidebar_customer():
     with st.sidebar:
-        st.markdown("## 📚 BOOKNEST")
+        st.markdown("## 📚 BooksKart")
         st.caption("Customer storefront")
         st.divider()
         if st.button("🏠 Storefront", key="cs_store", use_container_width=True): go("customer")
@@ -66,7 +66,7 @@ def sidebar_customer():
 
 def sidebar_staff(role):
     with st.sidebar:
-        st.markdown("## 📚 BOOKNEST")
+        st.markdown("## 📚 BooksKArt")
         st.caption(f"{role} Workspace")
         st.divider()
         if role=="Store Clerk":
